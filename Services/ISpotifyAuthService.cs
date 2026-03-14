@@ -1,0 +1,22 @@
+namespace Shared_Joy.Services;
+
+/// <summary>
+/// Spotify OAuth 2.0 PKCE 认证服务接口
+/// </summary>
+public interface ISpotifyAuthService
+{
+    /// <summary>是否已认证</summary>
+    bool IsAuthenticated { get; }
+
+    /// <summary>获取当前有效的访问令牌</summary>
+    Task<string?> GetAccessTokenAsync();
+
+    /// <summary>启动 OAuth 2.0 PKCE 认证流程</summary>
+    Task<bool> AuthenticateAsync();
+
+    /// <summary>注销并清除令牌</summary>
+    Task LogoutAsync();
+
+    /// <summary>尝试从存储中恢复令牌</summary>
+    Task<bool> TryRestoreTokenAsync();
+}

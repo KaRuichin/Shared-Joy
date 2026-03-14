@@ -3,12 +3,27 @@
     x:Class="Shared_Joy.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:Shared_Joy"
-    Title="Shared_Joy">
+    xmlns:pages="clr-namespace:Shared_Joy.Pages"
+    Title="Shared Joy">
 
-    <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+    <TabBar>
+        <ShellContent
+            Title="Dashboard"
+            Icon="icon_dashboard"
+            ContentTemplate="{DataTemplate pages:DashboardPage}"
+            Route="DashboardPage" />
+
+        <ShellContent
+            Title="Queue"
+            Icon="icon_queue"
+            ContentTemplate="{DataTemplate pages:QueueManagementPage}"
+            Route="QueueManagementPage" />
+
+        <ShellContent
+            Title="Settings"
+            Icon="icon_settings"
+            ContentTemplate="{DataTemplate pages:SettingsPage}"
+            Route="SettingsPage" />
+    </TabBar>
 
 </Shell>

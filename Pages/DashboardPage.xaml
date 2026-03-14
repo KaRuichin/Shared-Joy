@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Shared_Joy.ViewModels"
+             x:Class="Shared_Joy.Pages.DashboardPage"
+             x:DataType="vm:DashboardViewModel"
+             Title="Dashboard">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16">
+
+            <!-- 当前播放区域 -->
+            <Frame BorderColor="{StaticResource Primary}" Padding="12">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Now Playing" FontAttributes="Bold" FontSize="18" />
+                    <Label Text="Nothing playing" TextColor="Gray" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- 播放控制 -->
+            <HorizontalStackLayout HorizontalOptions="Center" Spacing="16">
+                <Button Text="⏯ Play/Pause" Command="{Binding TogglePlaybackCommand}" />
+                <Button Text="⏭ Next" Command="{Binding SkipNextCommand}" />
+            </HorizontalStackLayout>
+
+            <!-- QR 码与 PIN 码 -->
+            <Frame BorderColor="{StaticResource Primary}" Padding="12">
+                <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                    <Label Text="Scan to Join" FontAttributes="Bold" FontSize="16" HorizontalTextAlignment="Center" />
+                    <Image Source="{Binding QrCodeImage}" HeightRequest="200" WidthRequest="200" />
+                    <Label Text="{Binding PinCode}" FontSize="32" FontAttributes="Bold"
+                           HorizontalTextAlignment="Center" />
+                    <Label Text="{Binding GuestCount, StringFormat='Guests Online: {0}'}"
+                           HorizontalTextAlignment="Center" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- 会话控制 -->
+            <HorizontalStackLayout HorizontalOptions="Center" Spacing="16">
+                <Button Text="Start Session" Command="{Binding StartSessionCommand}"
+                        IsVisible="{Binding IsSessionActive, Converter={StaticResource InvertedBoolConverter}}" />
+                <Button Text="End Session" Command="{Binding EndSessionCommand}"
+                        IsVisible="{Binding IsSessionActive}"
+                        BackgroundColor="Red" TextColor="White" />
+            </HorizontalStackLayout>
+
+            <!-- 投票队列 -->
+            <Label Text="Vote Queue" FontAttributes="Bold" FontSize="18" />
+            <CollectionView ItemsSource="{Binding VoteQueue}" EmptyView="No votes yet">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame Padding="8" Margin="0,4">
+                            <HorizontalStackLayout Spacing="12">
+                                <Label Text="{Binding Track.Name}" FontSize="16"
+                                       VerticalTextAlignment="Center" />
+                                <Label Text="{Binding Track.Artists}" TextColor="Gray"
+                                       VerticalTextAlignment="Center" />
+                                <Label Text="{Binding VoteCount, StringFormat='🗳 {0}'}" 
+                                       FontAttributes="Bold" VerticalTextAlignment="Center"
+                                       HorizontalOptions="End" />
+                            </HorizontalStackLayout>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

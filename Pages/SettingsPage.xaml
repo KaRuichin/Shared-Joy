@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Shared_Joy.ViewModels"
+             x:Class="Shared_Joy.Pages.SettingsPage"
+             x:DataType="vm:SettingsViewModel"
+             Title="Settings">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16">
+
+            <!-- Spotify 配置 -->
+            <Label Text="Spotify Configuration" FontAttributes="Bold" FontSize="20" />
+
+            <VerticalStackLayout Spacing="8">
+                <Label Text="Client ID" />
+                <Entry Text="{Binding ClientId}" Placeholder="Enter Spotify Client ID" />
+                <Button Text="Save" Command="{Binding SaveClientIdCommand}" />
+            </VerticalStackLayout>
+
+            <BoxView HeightRequest="1" Color="LightGray" Margin="0,8" />
+
+            <!-- 登录状态 -->
+            <Label Text="Account" FontAttributes="Bold" FontSize="20" />
+
+            <VerticalStackLayout Spacing="8" IsVisible="{Binding IsLoggedIn, Converter={StaticResource InvertedBoolConverter}}">
+                <Label Text="Not signed in to Spotify" TextColor="Gray" />
+                <Label Text="⚠️ Playback controls require a Spotify Premium account" TextColor="Orange" FontSize="12" />
+                <Button Text="Sign in to Spotify" Command="{Binding LoginCommand}" />
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="8" IsVisible="{Binding IsLoggedIn}">
+                <Label Text="{Binding UserName, StringFormat='Signed in as: {0}'}" FontSize="16" />
+                <Button Text="Sign Out" Command="{Binding LogoutCommand}"
+                        BackgroundColor="Gray" TextColor="White" />
+            </VerticalStackLayout>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
