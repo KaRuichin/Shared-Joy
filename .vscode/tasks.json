@@ -26,6 +26,38 @@
             ],
             "group": "build",
             "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "publish-android-apk",
+            "type": "shell",
+            "command": "dotnet",
+            "args": [
+                "publish",
+                "${workspaceFolder}/Shared-Joy.csproj",
+                "-f",
+                "net10.0-android",
+                "-c",
+                "Release",
+                "-p:AndroidPackageFormat=apk"
+            ],
+            "group": "build",
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "publish-android-aab",
+            "type": "shell",
+            "command": "dotnet",
+            "args": [
+                "publish",
+                "${workspaceFolder}/Shared-Joy.csproj",
+                "-f",
+                "net10.0-android",
+                "-c",
+                "Release",
+                "-p:AndroidPackageFormat=aab"
+            ],
+            "group": "build",
+            "problemMatcher": "$msCompile"
         }
     ]
 }
