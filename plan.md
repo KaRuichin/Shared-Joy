@@ -1,4 +1,4 @@
-# Plan: 众乐 (Shared Joy) — .NET MAUI 全平台开发计划
+﻿# Plan: 众乐 (Shared Joy) — .NET MAUI 全平台开发计划
 
 ## TL;DR
 
@@ -10,6 +10,8 @@
 >
 > 应用面向英文用户，**所有用户可见的 UI 文本（XAML 页面、访客 Web 端）均使用英文**。
 > 代码注释和项目文档（plan.md / README）保持中文。
+
+<!-- -->
 
 > **⚠️ 技术审查说明（2026-03-11）**
 >
@@ -25,7 +27,7 @@
 
 ## 项目结构
 
-```
+```text
 Shared Joy/
 ├── Shared Joy.slnx
 ├── Shared Joy.csproj                   # 单项目 MAUI 工程文件
@@ -105,16 +107,16 @@ Shared Joy/
 
 ## 技术栈 & NuGet 依赖
 
-| 包名                                      | 用途                                                                     |
-| ----------------------------------------- | ------------------------------------------------------------------------ |
-| `CommunityToolkit.Mvvm` (v8.4.0)        | MVVM 基础设施（ObservableObject, RelayCommand 等）                       |
-| `CommunityToolkit.Maui` (v14.0.1)       | MAUI 扩展控件与行为                                                      |
-| `GenHTTP.Core` (v10.5.0)                | 嵌入式 HTTP 服务器核心引擎                                               |
-| `GenHTTP.Modules.Webservices` (v10.5.0) | REST 端点定义与 JSON WebService 支持                                     |
-| `GenHTTP.Modules.IO` (v10.5.0)          | 静态文件/资源处理能力                                                    |
-| `GenHTTP.Modules.Practices` (v10.5.0)   | 默认安全与性能实践（压缩、缓存等）                                       |
-| `QRCoder` (v1.7.0)                      | 纯 .NET QR 码生成（PngByteQRCode 输出 byte[] → ImageSource.FromStream） |
-| `sqlite-net-pcl` (v1.9.172)             | SQLite ORM 持久化（已内含 SQLitePCLRaw 传递依赖）                        |
+| 包名 | 用途 |
+| --- | --- |
+| `CommunityToolkit.Mvvm` (v8.4.0) | MVVM 基础设施（ObservableObject, RelayCommand 等） |
+| `CommunityToolkit.Maui` (v14.0.1) | MAUI 扩展控件与行为 |
+| `GenHTTP.Core` (v10.5.0) | 嵌入式 HTTP 服务器核心引擎 |
+| `GenHTTP.Modules.Webservices` (v10.5.0) | REST 端点定义与 JSON WebService 支持 |
+| `GenHTTP.Modules.IO` (v10.5.0) | 静态文件/资源处理能力 |
+| `GenHTTP.Modules.Practices` (v10.5.0) | 默认安全与性能实践（压缩、缓存等） |
+| `QRCoder` (v1.7.0) | 纯 .NET QR 码生成（PngByteQRCode 输出 byte[] → ImageSource.FromStream） |
+| `sqlite-net-pcl` (v1.9.172) | SQLite ORM 持久化（已内含 SQLitePCLRaw 传递依赖） |
 
 **目标框架**: `net10.0-android`, `net10.0-windows10.0.19041.0`
 
@@ -357,41 +359,41 @@ Shared Joy/
 
 ## 关键文件清单
 
-| 文件路径                               | 说明                       |
-| -------------------------------------- | -------------------------- |
-| `MauiProgram.cs`                     | DI 注册所有服务            |
-| `Services/SpotifyAuthService.cs`     | PKCE 全流程 + Token 管理   |
-| `Services/SpotifyApiService.cs`      | Spotify Web API 封装       |
-| `Services/WebServerService.cs`       | GenHTTP 服务器生命周期管理 |
-| `Services/StaticWebAssetService.cs`  | 访客静态资源解包           |
-| `Services/VotingEngine.cs`           | 线程安全投票排序核心逻辑   |
-| `Services/SessionManager.cs`         | PIN + 访客会话             |
-| `Services/QueueSyncService.cs`       | 后台同步 Spotify 队列      |
-| `Services/DatabaseService.cs`        | SQLite CRUD                |
-| `WebHost/Endpoints/*.cs`             | REST API 端点定义（5 个）  |
-| `Resources/Raw/WebClient/index.html` | 访客 SPA                   |
-| `Resources/Raw/WebClient/app.js`     | 访客端逻辑                 |
-| `Pages/DashboardPage.xaml`           | 主机控制面板               |
-| `Pages/SettingsPage.xaml`            | Spotify 配置               |
-| `Pages/QueueManagementPage.xaml`     | 主持人队列管理             |
-| `Helpers/NetworkHelper.cs`           | 局域网 IP 检测             |
-| `Helpers/QrCodeGenerator.cs`         | QR 码生成                  |
+| 文件路径 | 说明 |
+| --- | --- |
+| `MauiProgram.cs` | DI 注册所有服务 |
+| `Services/SpotifyAuthService.cs` | PKCE 全流程 + Token 管理 |
+| `Services/SpotifyApiService.cs` | Spotify Web API 封装 |
+| `Services/WebServerService.cs` | GenHTTP 服务器生命周期管理 |
+| `Services/StaticWebAssetService.cs` | 访客静态资源解包 |
+| `Services/VotingEngine.cs` | 线程安全投票排序核心逻辑 |
+| `Services/SessionManager.cs` | PIN + 访客会话 |
+| `Services/QueueSyncService.cs` | 后台同步 Spotify 队列 |
+| `Services/DatabaseService.cs` | SQLite CRUD |
+| `WebHost/Endpoints/*.cs` | REST API 端点定义（5 个） |
+| `Resources/Raw/WebClient/index.html` | 访客 SPA |
+| `Resources/Raw/WebClient/app.js` | 访客端逻辑 |
+| `Pages/DashboardPage.xaml` | 主机控制面板 |
+| `Pages/SettingsPage.xaml` | Spotify 配置 |
+| `Pages/QueueManagementPage.xaml` | 主持人队列管理 |
+| `Helpers/NetworkHelper.cs` | 局域网 IP 检测 |
+| `Helpers/QrCodeGenerator.cs` | QR 码生成 |
 
 ---
 
 ## 架构决策
 
-| 决策         | 选择                                                | 理由                                                        |
-| ------------ | --------------------------------------------------- | ----------------------------------------------------------- |
-| 嵌入式服务器 | GenHTTP.Core                                        | 活跃维护（v10.5.0），纯 .NET 实现，支持嵌入式托管与路由扩展 |
-| MVVM 框架    | CommunityToolkit.Mvvm                               | 官方推荐、源生成器、轻量                                    |
-| QR 生成      | QRCoder                                             | 纯 .NET 实现，无平台特定依赖                                |
-| 认证流程     | PKCE (无 Client Secret)                             | 移动端/桌面端安全最佳实践，无需后端                         |
-| 实时更新     | 轮询（3s 间隔）                                     | 比 WebSocket 简单，局域网延迟可接受                         |
-| Web 客户端   | 纯 HTML/CSS/JS                                      | 零构建依赖，嵌入 MAUI 资源包即可                            |
-| 数据库       | SQLite (sqlite-net-pcl)                             | 轻量、跨平台、ORM 友好                                      |
-| 目标平台     | Android + Windows（MacCatalyst 保留模板默认） | 与当前单项目 MAUI 模板一致，首发聚焦 Android + Windows |
-| UI 语言      | 英文                                          | 面向英文用户；代码注释与文档保持中文 |
+| 决策 | 选择 | 理由 |
+| --- | --- | --- |
+| 嵌入式服务器 | GenHTTP.Core | 活跃维护（v10.5.0），纯 .NET 实现，支持嵌入式托管与路由扩展 |
+| MVVM 框架 | CommunityToolkit.Mvvm | 官方推荐、源生成器、轻量 |
+| QR 生成 | QRCoder | 纯 .NET 实现，无平台特定依赖 |
+| 认证流程 | PKCE (无 Client Secret) | 移动端/桌面端安全最佳实践，无需后端 |
+| 实时更新 | 轮询（3s 间隔） | 比 WebSocket 简单，局域网延迟可接受 |
+| Web 客户端 | 纯 HTML/CSS/JS | 零构建依赖，嵌入 MAUI 资源包即可 |
+| 数据库 | SQLite (sqlite-net-pcl) | 轻量、跨平台、ORM 友好 |
+| 目标平台 | Android + Windows（MacCatalyst 保留模板默认） | 与当前单项目 MAUI 模板一致，首发聚焦 Android + Windows |
+| UI 语言 | 英文 | 面向英文用户；代码注释与文档保持中文 |
 
 ---
 
