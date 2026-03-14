@@ -1,6 +1,6 @@
-[中文](README.md) | [English](README.en.md)
-
 # 🎵 众乐 (Shared Joy)
+
+[中文](README.md) | [English](README.en.md)
 
 将手机或电脑变成**本地 Spotify 点唱机**：主机运行 **.NET MAUI + XAML** 应用，访客通过同一局域网浏览器扫码进入页面，输入 PIN 后即可搜索与投票，无需安装 App。
 
@@ -25,7 +25,7 @@
 
 ## 🏗️ 技术架构
 
-```
+```text
 主机（.NET MAUI）                               访客（浏览器）
 ┌────────────────────────────────────────┐     ┌──────────────────────────┐
 │  AppShell / MVVM                      │◄──►│  WebClient (SPA)          │

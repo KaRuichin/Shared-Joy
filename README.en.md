@@ -23,7 +23,7 @@ Turn your phone or computer into a **local Spotify jukebox**: the host runs a **
 
 ## 🏗️ Technical Architecture
 
-```
+```text
 Host (.NET MAUI)                                 Guests (Browser)
 ┌────────────────────────────────────────┐       ┌──────────────────────────┐
 │  AppShell / MVVM                      │◄────►│  WebClient (SPA)         │
