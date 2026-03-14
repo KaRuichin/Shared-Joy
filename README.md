@@ -40,6 +40,15 @@
 └────────────────────────────────────────┘
 ```
 
+## 🔧 当前技术基线
+
+- **目标框架**：`net10.0-android`、`net10.0-windows10.0.19041.0`
+- **嵌入式服务**：`GenHTTP.Core` + `GenHTTP.Modules.*` 提供局域网 API 与静态页面托管
+- **状态管理**：主机端采用 `XAML + MVVM`（CommunityToolkit.Mvvm）分层
+- **二维码生成**：使用 `QRCoder` 输出 PNG 字节流并在 MAUI 中渲染
+- **配置与存储**：应用配置使用 `Preferences`，投票与历史记录使用 `SQLite`（`sqlite-net-pcl`）
+- **访客端形态**：`Resources/Raw/WebClient` 中的纯 HTML/CSS/JS 单页应用
+
 ## ⚙️ Spotify 配置
 
 1. 打开 [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)

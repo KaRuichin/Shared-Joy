@@ -38,6 +38,15 @@ Host (.NET MAUI)                                 Guests (Browser)
 └────────────────────────────────────────┘
 ```
 
+## 🔧 Current Technical Baseline
+
+- **Target frameworks**: `net10.0-android`, `net10.0-windows10.0.19041.0`
+- **Embedded server**: `GenHTTP.Core` + `GenHTTP.Modules.*` for LAN APIs and static hosting
+- **State architecture**: Host app uses layered `XAML + MVVM` with CommunityToolkit.Mvvm
+- **QR generation**: `QRCoder` outputs PNG bytes rendered directly in MAUI
+- **Config and persistence**: App settings in `Preferences`; vote/history data in `SQLite` via `sqlite-net-pcl`
+- **Guest client**: Pure HTML/CSS/JS SPA under `Resources/Raw/WebClient`
+
 ## ⚙️ Spotify Setup
 
 1. Open the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard).
