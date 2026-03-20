@@ -8,7 +8,10 @@ public interface ISpotifyAuthService
     /// <summary>是否已认证</summary>
     bool IsAuthenticated { get; }
 
-    /// <summary>获取当前有效的访问令牌</summary>
+    /// <summary>认证状态变更事件</summary>
+    event EventHandler<bool>? AuthenticationChanged;
+
+    /// <summary>获取当前有效的访问令牌（自动刷新过期令牌）</summary>
     Task<string?> GetAccessTokenAsync();
 
     /// <summary>启动 OAuth 2.0 PKCE 认证流程</summary>
@@ -19,4 +22,7 @@ public interface ISpotifyAuthService
 
     /// <summary>尝试从存储中恢复令牌</summary>
     Task<bool> TryRestoreTokenAsync();
+
+    /// <summary>获取当前用户显示名称</summary>
+    Task<string?> GetUserDisplayNameAsync();
 }
