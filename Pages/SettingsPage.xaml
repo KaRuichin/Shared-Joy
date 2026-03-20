@@ -125,11 +125,21 @@
                     <Label Text="   Android: sharedjoy://callback"
                            FontSize="12"
                            FontFamily="OpenSansRegular"
-                           TextColor="Gray"/>
+                           TextColor="DodgerBlue"
+                           TextDecorations="Underline">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnCopyAndroidCallbackTapped"/>
+                        </Label.GestureRecognizers>
+                    </Label>
                     <Label Text="   Windows: http://127.0.0.1:5432/callback"
                            FontSize="12"
                            FontFamily="OpenSansRegular"
-                           TextColor="Gray"/>
+                           TextColor="DodgerBlue"
+                           TextDecorations="Underline">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnCopyWindowsCallbackTapped"/>
+                        </Label.GestureRecognizers>
+                    </Label>
                     <Label Text="3. Copy the Client ID and paste it above"
                            FontSize="13"/>
                     <Label Text="4. Click 'Sign in to Spotify' to authorize"
