@@ -37,6 +37,10 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private string _userName = string.Empty;
 
+    /// <summary>Spotify 用户头像 URL</summary>
+    [ObservableProperty]
+    private string _userAvatarUrl = string.Empty;
+
     /// <summary>状态消息（用于显示操作反馈）</summary>
     [ObservableProperty]
     private string _statusMessage = string.Empty;
@@ -144,6 +148,7 @@ public partial class SettingsViewModel : ObservableObject
             await _authService.LogoutAsync();
             IsLoggedIn = false;
             UserName = string.Empty;
+            UserAvatarUrl = string.Empty;
             StatusMessage = "Signed out";
         }
         catch (Exception ex)
@@ -165,6 +170,9 @@ public partial class SettingsViewModel : ObservableObject
         {
             var displayName = await _authService.GetUserDisplayNameAsync();
             UserName = displayName ?? "Unknown User";
+
+            var avatarUrl = await _authService.GetUserAvatarUrlAsync();
+            UserAvatarUrl = avatarUrl ?? string.Empty;
         }
         catch (Exception ex)
         {

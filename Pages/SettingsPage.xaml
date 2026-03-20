@@ -73,11 +73,34 @@
                              StrokeShape="RoundRectangle 8"
                              IsVisible="{Binding IsLoggedIn}">
                             <VerticalStackLayout Spacing="12">
-                                   <HorizontalStackLayout Spacing="8">
-                                          <Label Text="🎵"
-                                                 FontSize="24"
-                                                 VerticalOptions="Center"/>
-                                          <VerticalStackLayout>
+                                   <HorizontalStackLayout Spacing="12">
+                                          <!-- 用户头像 -->
+                                          <Border StrokeShape="RoundRectangle 24"
+                                                  StrokeThickness="0"
+                                                  HeightRequest="48"
+                                                  WidthRequest="48"
+                                                  VerticalOptions="Center"
+                                                  IsVisible="{Binding UserAvatarUrl, Converter={toolkit:IsStringNotNullOrWhiteSpaceConverter}}">
+                                                 <Image Source="{Binding UserAvatarUrl}"
+                                                        Aspect="AspectFill"
+                                                        HeightRequest="48"
+                                                        WidthRequest="48"/>
+                                          </Border>
+                                          <!-- 无头像时的占位符 -->
+                                          <Border StrokeShape="RoundRectangle 24"
+                                                  Stroke="LightGray"
+                                                  StrokeThickness="1"
+                                                  BackgroundColor="#E0E0E0"
+                                                  HeightRequest="48"
+                                                  WidthRequest="48"
+                                                  VerticalOptions="Center"
+                                                  IsVisible="{Binding UserAvatarUrl, Converter={toolkit:IsStringNullOrWhiteSpaceConverter}}">
+                                                 <Label Text="🎵"
+                                                        FontSize="20"
+                                                        HorizontalOptions="Center"
+                                                        VerticalOptions="Center"/>
+                                          </Border>
+                                          <VerticalStackLayout VerticalOptions="Center">
                                                  <Label Text="Signed in as"
                                                         TextColor="Gray"
                                                         FontSize="12"/>
@@ -124,7 +147,7 @@
                                           FontSize="13"/>
                                    <HorizontalStackLayout Spacing="4">
                                           <Label Text="   Android:"
-                                                        FontSize="12"/>
+                                                 FontSize="12"/>
                                           <Label Text="sharedjoy://callback"
                                                  FontSize="12"
                                                  FontFamily="OpenSansRegular"
@@ -135,13 +158,13 @@
                                                  </Label.GestureRecognizers>
                                           </Label>
                                           <Label Text="📋"
-                                                        FontSize="10"
-                                                        VerticalOptions="Center"
-                                                        TextColor="Gray"/>
+                                                 FontSize="10"
+                                                 VerticalOptions="Center"
+                                                 TextColor="Gray"/>
                                    </HorizontalStackLayout>
                                    <HorizontalStackLayout Spacing="4">
                                           <Label Text="   Windows:"
-                                                        FontSize="12"/>
+                                                 FontSize="12"/>
                                           <Label Text="http://127.0.0.1:5432/callback"
                                                  FontSize="12"
                                                  FontFamily="OpenSansRegular"
@@ -152,9 +175,9 @@
                                                  </Label.GestureRecognizers>
                                           </Label>
                                           <Label Text="📋"
-                                                        FontSize="10"
-                                                        VerticalOptions="Center"
-                                                        TextColor="Gray"/>
+                                                 FontSize="10"
+                                                 VerticalOptions="Center"
+                                                 TextColor="Gray"/>
                                    </HorizontalStackLayout>
                                    <Label Text="3. Copy the Client ID and paste it above"
                                           FontSize="13"/>

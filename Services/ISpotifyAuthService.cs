@@ -25,4 +25,7 @@ public interface ISpotifyAuthService
 
     /// <summary>获取当前用户显示名称</summary>
     Task<string?> GetUserDisplayNameAsync();
+
+    /// <summary>获取当前用户头像 URL</summary>
+    Task<string?> GetUserAvatarUrlAsync();
 }

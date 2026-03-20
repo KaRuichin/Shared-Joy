@@ -226,6 +226,24 @@ public class SpotifyAuthService : ISpotifyAuthService
     /// </summary>
     public async Task<string?> GetUserDisplayNameAsync()
     {
+        var profile = await GetUserProfileAsync();
+        return profile?.DisplayName;
+    }
+
+    /// <summary>
+    /// 获取当前用户头像 URL
+    /// </summary>
+    public async Task<string?> GetUserAvatarUrlAsync()
+    {
+        var profile = await GetUserProfileAsync();
+        return profile?.AvatarUrl;
+    }
+
+    /// <summary>
+    /// 获取用户 Profile 信息（内部缓存避免重复请求）
+    /// </summary>
+    private async Task<UserProfile?> GetUserProfileAsync()
+    {
         var token = await GetAccessTokenAsync();
         if (token is null) return null;
 
@@ -238,7 +256,24 @@ public class SpotifyAuthService : ISpotifyAuthService
             if (!response.IsSuccessStatusCode) return null;
 
             var json = await response.Content.ReadFromJsonAsync<JsonElement>();
-            return json.GetProperty("display_name").GetString();
+
+            var displayName = json.TryGetProperty("display_name", out var nameProp)
+                ? nameProp.GetString() : null;
+
+            // Spotify images 数组：取第一张（通常是最大尺寸）
+            string? avatarUrl = null;
+            if (json.TryGetProperty("images", out var imagesProp) &&
+                imagesProp.ValueKind == JsonValueKind.Array &&
+                imagesProp.GetArrayLength() > 0)
+            {
+                var firstImage = imagesProp[0];
+                if (firstImage.TryGetProperty("url", out var urlProp))
+                {
+                    avatarUrl = urlProp.GetString();
+                }
+            }
+
+            return new UserProfile(displayName, avatarUrl);
         }
         catch (Exception ex)
         {
@@ -246,6 +281,9 @@ public class SpotifyAuthService : ISpotifyAuthService
             return null;
         }
     }
+
+    /// <summary>用户 Profile 内部记录</summary>
+    private sealed record UserProfile(string? DisplayName, string? AvatarUrl);
 
     #region 平台特定认证流程
 
