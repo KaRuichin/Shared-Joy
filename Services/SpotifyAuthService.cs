@@ -166,10 +166,13 @@ public class SpotifyAuthService : ISpotifyAuthService
         _refreshToken = null;
         _tokenExpiry = DateTime.MinValue;
 
-        // 清除 SecureStorage 中的令牌
+        // 清除 SecureStorage 和 Preferences 中的令牌
         SecureStorage.Remove(KeyAccessToken);
         SecureStorage.Remove(KeyRefreshToken);
         SecureStorage.Remove(KeyTokenExpiry);
+        Preferences.Remove($"fallback_{KeyAccessToken}");
+        Preferences.Remove($"fallback_{KeyRefreshToken}");
+        Preferences.Remove($"fallback_{KeyTokenExpiry}");
 
         AuthenticationChanged?.Invoke(this, false);
         System.Diagnostics.Debug.WriteLine("[SpotifyAuth] 已注销");
@@ -184,13 +187,14 @@ public class SpotifyAuthService : ISpotifyAuthService
     {
         try
         {
-            var accessToken = await SecureStorage.GetAsync(KeyAccessToken);
-            var refreshToken = await SecureStorage.GetAsync(KeyRefreshToken);
-            var expiryStr = await SecureStorage.GetAsync(KeyTokenExpiry);
+            // 优先从 SecureStorage 读取
+            var accessToken = await ReadSecureAsync(KeyAccessToken);
+            var refreshToken = await ReadSecureAsync(KeyRefreshToken);
+            var expiryStr = await ReadSecureAsync(KeyTokenExpiry);
 
-            if (string.IsNullOrEmpty(accessToken) || string.IsNullOrEmpty(refreshToken))
+            if (string.IsNullOrEmpty(refreshToken))
             {
-                System.Diagnostics.Debug.WriteLine("[SpotifyAuth] 无已保存的令牌");
+                System.Diagnostics.Debug.WriteLine("[SpotifyAuth] 无已保存的 refresh_token");
                 return false;
             }
 
@@ -198,13 +202,14 @@ public class SpotifyAuthService : ISpotifyAuthService
             _refreshToken = refreshToken;
             _tokenExpiry = DateTime.TryParse(expiryStr, out var expiry) ? expiry : DateTime.MinValue;
 
-            // 如果令牌已过期，尝试刷新
-            if (DateTime.UtcNow >= _tokenExpiry)
+            // refresh_token 存在即可恢复——access_token 过期或为空都通过刷新解决
+            if (string.IsNullOrEmpty(_accessToken) || DateTime.UtcNow >= _tokenExpiry)
             {
-                System.Diagnostics.Debug.WriteLine("[SpotifyAuth] 已保存的令牌已过期，尝试刷新");
+                System.Diagnostics.Debug.WriteLine("[SpotifyAuth] access_token 缺失或已过期，尝试刷新");
                 var refreshed = await RefreshAccessTokenAsync();
                 if (!refreshed)
                 {
+                    System.Diagnostics.Debug.WriteLine("[SpotifyAuth] refresh_token 刷新失败，需要重新授权");
                     await LogoutAsync();
                     return false;
                 }
@@ -219,6 +224,53 @@ public class SpotifyAuthService : ISpotifyAuthService
             System.Diagnostics.Debug.WriteLine($"[SpotifyAuth] 令牌恢复异常: {ex.Message}");
             return false;
         }
+    }
+
+    /// <summary>
+    /// 安全读取 SecureStorage，Android Keystore 损坏时自动清理并回退到 Preferences
+    /// </summary>
+    private static async Task<string?> ReadSecureAsync(string key)
+    {
+        try
+        {
+            var value = await SecureStorage.GetAsync(key);
+            if (!string.IsNullOrEmpty(value))
+                return value;
+        }
+        catch (Exception ex)
+        {
+            // Android: Keystore 密钥在 debug 重签名后可能失效
+            System.Diagnostics.Debug.WriteLine($"[SpotifyAuth] SecureStorage 读取 '{key}' 失败: {ex.Message}");
+            SecureStorage.Remove(key);
+        }
+
+        // 回退到 Preferences
+        var fallback = Preferences.Get($"fallback_{key}", string.Empty);
+        if (!string.IsNullOrEmpty(fallback))
+        {
+            System.Diagnostics.Debug.WriteLine($"[SpotifyAuth] 从 Preferences 回退读取 '{key}' 成功");
+            return fallback;
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// 双写 SecureStorage + Preferences（确保 Android 重启后可恢复）
+    /// </summary>
+    private static async Task WriteSecureAsync(string key, string value)
+    {
+        try
+        {
+            await SecureStorage.SetAsync(key, value);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[SpotifyAuth] SecureStorage 写入 '{key}' 失败: {ex.Message}");
+        }
+
+        // 始终同步写入 Preferences 作为回退
+        Preferences.Set($"fallback_{key}", value);
     }
 
     /// <summary>
@@ -433,10 +485,11 @@ public class SpotifyAuthService : ISpotifyAuthService
             if (!string.IsNullOrEmpty(tokenResponse.RefreshToken))
                 _refreshToken = tokenResponse.RefreshToken;
 
-            // 持久化到 SecureStorage
-            await SecureStorage.SetAsync(KeyAccessToken, _accessToken);
-            await SecureStorage.SetAsync(KeyRefreshToken, _refreshToken!);
-            await SecureStorage.SetAsync(KeyTokenExpiry, _tokenExpiry.ToString("O"));
+            // 持久化到 SecureStorage + Preferences 双写（防止 Android Keystore 失效）
+            var expiryStr = _tokenExpiry.ToString("O");
+            await WriteSecureAsync(KeyAccessToken, _accessToken);
+            await WriteSecureAsync(KeyRefreshToken, _refreshToken!);
+            await WriteSecureAsync(KeyTokenExpiry, expiryStr);
 
             System.Diagnostics.Debug.WriteLine($"[SpotifyAuth] 令牌已更新，过期时间: {_tokenExpiry:u}");
             return true;
