@@ -11,17 +11,65 @@
         <VerticalStackLayout Padding="20" Spacing="16">
 
             <!-- 当前播放区域 -->
-            <Border Stroke="{StaticResource Primary}" Padding="12" StrokeThickness="1">
-                <VerticalStackLayout Spacing="8">
-                    <Label Text="Now Playing" FontAttributes="Bold" FontSize="18" />
-                    <Label Text="Nothing playing" TextColor="Gray" />
-                </VerticalStackLayout>
+            <Border Stroke="{StaticResource Primary}" Padding="12" StrokeThickness="1"
+                    StrokeShape="RoundRectangle 8">
+                <Grid ColumnDefinitions="80,*" ColumnSpacing="12">
+
+                    <!-- 专辑封面 -->
+                    <Border StrokeThickness="0" StrokeShape="RoundRectangle 6"
+                            HeightRequest="80" WidthRequest="80"
+                            IsVisible="{Binding HasTrack}">
+                        <Image Source="{Binding AlbumImageUrl}" Aspect="AspectFill" />
+                    </Border>
+
+                    <!-- 无播放时的占位图标 -->
+                    <Border StrokeThickness="0" BackgroundColor="#2a2a2a"
+                            StrokeShape="RoundRectangle 6"
+                            HeightRequest="80" WidthRequest="80"
+                            IsVisible="{Binding HasTrack, Converter={StaticResource InvertedBoolConverter}}">
+                        <Label Text="🎵" FontSize="32" HorizontalOptions="Center" VerticalOptions="Center" />
+                    </Border>
+
+                    <!-- 歌曲信息 + 进度条 -->
+                    <VerticalStackLayout Grid.Column="1" Spacing="4" VerticalOptions="Center">
+                        <Label Text="Now Playing" FontSize="12" TextColor="Gray" />
+
+                        <!-- 有歌曲时显示曲目信息 -->
+                        <Label Text="{Binding TrackName}" FontSize="16" FontAttributes="Bold"
+                               LineBreakMode="TailTruncation" MaxLines="1"
+                               IsVisible="{Binding HasTrack}" />
+                        <Label Text="{Binding TrackArtists}" FontSize="13" TextColor="Gray"
+                               LineBreakMode="TailTruncation" MaxLines="1"
+                               IsVisible="{Binding HasTrack}" />
+                        <Label Text="{Binding AlbumName}" FontSize="12" TextColor="DarkGray"
+                               LineBreakMode="TailTruncation" MaxLines="1"
+                               IsVisible="{Binding HasTrack}" />
+
+                        <!-- 无歌曲时显示提示 -->
+                        <Label Text="Nothing playing" FontSize="14" TextColor="Gray"
+                               IsVisible="{Binding HasTrack, Converter={StaticResource InvertedBoolConverter}}" />
+
+                        <!-- 进度条 -->
+                        <ProgressBar Progress="{Binding ProgressRatio}" ProgressColor="{StaticResource Primary}"
+                                     HeightRequest="4" Margin="0,4,0,0"
+                                     IsVisible="{Binding HasTrack}" />
+
+                        <!-- 进度时间 + 设备名 -->
+                        <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding HasTrack}">
+                            <Label Text="{Binding ProgressText}" FontSize="11" TextColor="Gray" />
+                            <Label Grid.Column="1" Text="{Binding DeviceName, StringFormat='🔊 {0}'}"
+                                   FontSize="11" TextColor="Gray" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Grid>
             </Border>
 
             <!-- 播放控制 -->
             <HorizontalStackLayout HorizontalOptions="Center" Spacing="16">
-                <Button Text="⏯ Play/Pause" Command="{Binding TogglePlaybackCommand}" />
-                <Button Text="⏭ Next" Command="{Binding SkipNextCommand}" />
+                <Button Text="{Binding PlayPauseButtonText}" Command="{Binding TogglePlaybackCommand}"
+                        WidthRequest="120" />
+                <Button Text="⏭ Next" Command="{Binding SkipNextCommand}"
+                        WidthRequest="100" />
             </HorizontalStackLayout>
 
             <!-- QR 码与 PIN 码 -->
