@@ -16,4 +16,7 @@ public class PlaybackState
 
     /// <summary>设备名称</summary>
     public string DeviceName { get; set; } = string.Empty;
+
+    /// <summary>设备 ID（用于将歌曲精确加入同一设备队列）</summary>
+    public string DeviceId { get; set; } = string.Empty;
 }

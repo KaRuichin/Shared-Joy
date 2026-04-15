@@ -13,8 +13,8 @@ public interface ISpotifyApiService
     /// <summary>获取当前播放状态</summary>
     Task<PlaybackState?> GetCurrentPlaybackAsync();
 
-    /// <summary>将歌曲添加到播放队列</summary>
-    Task<bool> AddToQueueAsync(string trackUri);
+    /// <summary>将歌曲添加到播放队列（可指定 deviceId）</summary>
+    Task<bool> AddToQueueAsync(string trackUri, string? deviceId = null);
 
     /// <summary>开始播放</summary>
     Task<bool> PlayAsync();

@@ -101,6 +101,13 @@ public class SpotifyApiService : ISpotifyApiService
                 state.DeviceName = deviceName.GetString() ?? string.Empty;
             }
 
+            // 解析设备 ID（用于后续精准入队到同一设备）
+            if (json.TryGetProperty("device", out device) &&
+                device.TryGetProperty("id", out var deviceId))
+            {
+                state.DeviceId = deviceId.GetString() ?? string.Empty;
+            }
+
             // 解析当前播放歌曲
             if (json.TryGetProperty("item", out var item) &&
                 item.ValueKind == JsonValueKind.Object)
@@ -118,9 +125,9 @@ public class SpotifyApiService : ISpotifyApiService
     }
 
     /// <summary>
-    /// 将歌曲添加到播放队列 — POST /v1/me/player/queue?uri={trackUri}
+    /// 将歌曲添加到播放队列 — POST /v1/me/player/queue?uri={trackUri}[&amp;device_id={deviceId}]
     /// </summary>
-    public async Task<bool> AddToQueueAsync(string trackUri)
+    public async Task<bool> AddToQueueAsync(string trackUri, string? deviceId = null)
     {
         if (string.IsNullOrWhiteSpace(trackUri))
             return false;
@@ -128,10 +135,27 @@ public class SpotifyApiService : ISpotifyApiService
         try
         {
             var url = $"{BaseUrl}/me/player/queue?uri={Uri.EscapeDataString(trackUri)}";
+            if (!string.IsNullOrWhiteSpace(deviceId))
+            {
+                url += $"&device_id={Uri.EscapeDataString(deviceId)}";
+            }
+
             var response = await SendWithRetryAsync(HttpMethod.Post, url);
 
             var success = response?.StatusCode == HttpStatusCode.NoContent;
-            System.Diagnostics.Debug.WriteLine($"[SpotifyApi] 添加到队列 {trackUri}: {(success ? "成功" : "失败")}");
+
+            if (!success)
+            {
+                var status = response?.StatusCode.ToString() ?? "null";
+                var body = response is null ? string.Empty : await response.Content.ReadAsStringAsync();
+                System.Diagnostics.Debug.WriteLine(
+                    $"[SpotifyApi] 添加到队列失败: uri={trackUri}, deviceId={deviceId ?? "<none>"}, status={status}, body={body}");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine(
+                    $"[SpotifyApi] 添加到队列成功: uri={trackUri}, deviceId={deviceId ?? "<none>"}");
+            }
             return success;
         }
         catch (Exception ex)

@@ -169,10 +169,21 @@ public class QueueSyncService : IQueueSyncService
         if (candidate is null)
             return; // 所有高票歌曲都已推送
 
-        // 推送到 Spotify 队列
-        var success = await _spotifyApi.AddToQueueAsync(candidate.Track.Uri);
+        // 推送到 Spotify 队列：优先指定当前播放设备；失败则降级重试一次（不指定设备）
+        var success = await _spotifyApi.AddToQueueAsync(candidate.Track.Uri, playback.DeviceId);
         if (!success)
-            return;
+        {
+            System.Diagnostics.Debug.WriteLine(
+                $"[QueueSync] 指定设备入队失败，降级重试: track={candidate.Track.Name}, deviceId={playback.DeviceId}, deviceName={playback.DeviceName}");
+
+            success = await _spotifyApi.AddToQueueAsync(candidate.Track.Uri);
+            if (!success)
+            {
+                System.Diagnostics.Debug.WriteLine(
+                    $"[QueueSync] 入队最终失败: track={candidate.Track.Name}, uri={candidate.Track.Uri}, deviceId={playback.DeviceId}, deviceName={playback.DeviceName}");
+                return;
+            }
+        }
 
         // 标记为已推送，从投票池移除
         _pushedTrackIds.Add(candidate.Track.Id);
