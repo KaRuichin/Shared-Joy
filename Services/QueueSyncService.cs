@@ -74,12 +74,51 @@ public class QueueSyncService : IQueueSyncService
     }
 
     /// <summary>
-    /// 后台同步循环：每 7 秒检查一次 Spotify 播放状态和投票队列
+    /// 立即触发一次同步（投票后调用，加快推送响应）
+    /// </summary>
+    public async Task TriggerSyncAsync()
+    {
+        if (!IsRunning)
+            return;
+
+        try
+        {
+            await TrySyncAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[QueueSync] 触发同步异常: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// 后台同步循环：启动时立即执行一次同步，然后每 5 秒检查一次
+    /// （改为 5 秒因为已改进推送策略，可更频繁地检查）
     /// </summary>
     private async Task SyncLoopAsync(CancellationToken ct)
     {
+        // 启动时立即执行一次同步，无需等待
+        try
+        {
+            await TrySyncAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[QueueSync] 初始同步异常: {ex.Message}");
+        }
+
+        // 然后定期检查
         while (!ct.IsCancellationRequested)
         {
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(5), ct);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+
             try
             {
                 await TrySyncAsync();
@@ -88,20 +127,14 @@ public class QueueSyncService : IQueueSyncService
             {
                 System.Diagnostics.Debug.WriteLine($"[QueueSync] 同步异常: {ex.Message}");
             }
-
-            try
-            {
-                await Task.Delay(TimeSpan.FromSeconds(7), ct);
-            }
-            catch (OperationCanceledException)
-            {
-                break;
-            }
         }
     }
 
     /// <summary>
     /// 单次同步：检查 Spotify 队列状态，按需推送高票歌曲
+    /// 
+    /// 推送策略：当投票队列非空且队列中没有待推送歌曲时，立即推送最高票歌曲
+    /// 如果已推送歌曲未在 Spotify 中出现，说明有网络延迟，稍后重试
     /// </summary>
     private async Task TrySyncAsync()
     {
@@ -110,15 +143,26 @@ public class QueueSyncService : IQueueSyncService
         if (playback is null)
             return; // 无活跃设备，跳过
 
-        // 获取 Spotify 队列，判断是否需要补充
-        var spotifyQueue = await _spotifyApi.GetQueueAsync();
-        if (spotifyQueue.Count > 2)
-            return; // 队列中还有足够歌曲，不急于补充
-
         // 获取投票排行榜
         var ranked = _votingEngine.GetRankedQueue();
         if (ranked.Count == 0)
             return; // 没有待投票歌曲
+
+        // 获取 Spotify 队列，判断是否需要补充
+        var spotifyQueue = await _spotifyApi.GetQueueAsync();
+
+        // 【改进策略】更激进的推送逻辑：
+        //   - 如果 Spotify 队列为空或很少，立即推送高票歌曲
+        //   - 检查是否有已推送但未在队列中出现的歌曲（网络延迟场景）
+        //   - 只有当队列中已经有充足的待播放歌曲时，才跳过推送
+
+        // 检查是否有已推送歌曲已出现在 Spotify 队列中（确认推送成功）
+        var confirmedInQueue = _pushedTrackIds.Where(id => spotifyQueue.Any(t => t.Id == id)).ToList();
+        var unconfirmedCount = _pushedTrackIds.Count - confirmedInQueue.Count;
+
+        // 如果队列充足（保持至少 3 首待播歌曲）且没有待确认的推送，则不急于推送
+        if (spotifyQueue.Count >= 3 && unconfirmedCount == 0)
+            return;
 
         // 找到第一首尚未推送过的歌曲
         var candidate = ranked.FirstOrDefault(v => !_pushedTrackIds.Contains(v.Track.Id));

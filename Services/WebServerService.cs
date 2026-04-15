@@ -29,6 +29,7 @@ public class WebServerService : IWebServerService
     private readonly ISessionManager _sessionManager;
     private readonly ISpotifyApiService _spotifyApi;
     private readonly IVotingEngine _votingEngine;
+    private readonly IQueueSyncService _queueSync;
 
     private IServerHost? _host;
 
@@ -36,12 +37,14 @@ public class WebServerService : IWebServerService
         IStaticWebAssetService assetService,
         ISessionManager sessionManager,
         ISpotifyApiService spotifyApi,
-        IVotingEngine votingEngine)
+        IVotingEngine votingEngine,
+        IQueueSyncService queueSync)
     {
         _assetService = assetService;
         _sessionManager = sessionManager;
         _spotifyApi = spotifyApi;
         _votingEngine = votingEngine;
+        _queueSync = queueSync;
     }
 
     public bool IsRunning { get; private set; }
@@ -59,7 +62,7 @@ public class WebServerService : IWebServerService
         // 手动构建端点实例（注入依赖），避免 AddService<T> 与 MAUI 扩展方法冲突
         var authEndpoint = new AuthEndpoint(_sessionManager);
         var searchEndpoint = new SearchEndpoint(_spotifyApi);
-        var voteEndpoint = new VoteEndpoint(_votingEngine);
+        var voteEndpoint = new VoteEndpoint(_votingEngine, _queueSync);
         var queueEndpoint = new QueueEndpoint(_votingEngine);
         var nowPlayingEndpoint = new NowPlayingEndpoint(_spotifyApi);
 

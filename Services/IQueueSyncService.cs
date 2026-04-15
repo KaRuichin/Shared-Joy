@@ -13,4 +13,7 @@ public interface IQueueSyncService
 
     /// <summary>停止后台同步</summary>
     Task StopAsync();
+
+    /// <summary>立即触发一次同步（用于投票后快速推送）</summary>
+    Task TriggerSyncAsync();
 }

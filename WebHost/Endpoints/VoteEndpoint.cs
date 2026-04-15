@@ -13,18 +13,21 @@ namespace Shared_Joy.WebHost.Endpoints;
 public class VoteEndpoint
 {
     private readonly IVotingEngine _votingEngine;
+    private readonly IQueueSyncService _queueSync;
 
-    public VoteEndpoint(IVotingEngine votingEngine)
+    public VoteEndpoint(IVotingEngine votingEngine, IQueueSyncService queueSync)
     {
         _votingEngine = votingEngine;
+        _queueSync = queueSync;
     }
 
     /// <summary>
     /// POST /api/vote
     /// 请求体: { "guestId": "...", "track": { "id": "...", "name": "...", ... } }
+    /// 投票成功后立即触发一次队列同步，加快歌曲进入 Spotify 队列
     /// </summary>
     [ResourceMethod(RequestMethod.Post)]
-    public VoteResponse PostVote(VoteRequest request)
+    public async Task<VoteResponse> PostVote(VoteRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.GuestId) || request.Track is null ||
             string.IsNullOrWhiteSpace(request.Track.Id))
@@ -50,6 +53,16 @@ public class VoteEndpoint
         };
 
         var success = _votingEngine.Vote(request.GuestId, track);
+
+        // 投票成功后立即触发队列同步，无需等待定时器
+        if (success)
+        {
+            _ = Task.Run(async () =>
+            {
+                await _queueSync.TriggerSyncAsync();
+                System.Diagnostics.Debug.WriteLine($"[VoteEndpoint] 投票后立即触发同步");
+            });
+        }
 
         return new VoteResponse
         {
