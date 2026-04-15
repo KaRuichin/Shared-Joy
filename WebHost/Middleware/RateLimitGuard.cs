@@ -30,7 +30,7 @@ public class RateLimitGuard : IConcern
     public async ValueTask<IResponse?> HandleAsync(IRequest request)
     {
         var clientIp = request.Client.IPAddress?.ToString() ?? "unknown";
-        var path = request.Target.Current?.Value ?? string.Empty;
+        var path = request.Target.Path.ToString();
 
         // 对 /api/auth 路径进行 PIN 暴力破解保护
         if (path.Contains("/api/auth", StringComparison.OrdinalIgnoreCase) &&

@@ -77,13 +77,13 @@ public class WebServerService : IWebServerService
             .Add(new RateLimitGuardBuilder())
             .Add(new GuestSessionGuardBuilder(_sessionManager));
 
-        // 如果静态资源目录存在，添加静态网站服务（自动将 index.html 映射到 /）
+        // 如果静态资源目录存在，添加静态网站服务
+        // StaticWebsite 自动将 index.html/index.htm 映射为目录默认文档
         if (!string.IsNullOrEmpty(_assetService.WebRootPath) &&
             Directory.Exists(_assetService.WebRootPath))
         {
             var tree = ResourceTree.FromDirectory(_assetService.WebRootPath);
-            var website = StaticWebsite.From(tree).AddIndex("index.html");
-            rootLayout.Fallback(website);
+            rootLayout.Add(StaticWebsite.From(tree));
         }
 
         // 启动 GenHTTP 服务器

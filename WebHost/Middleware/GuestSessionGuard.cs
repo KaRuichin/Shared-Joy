@@ -24,7 +24,7 @@ public class GuestSessionGuard : IConcern
 
     public async ValueTask<IResponse?> HandleAsync(IRequest request)
     {
-        var path = request.Target.Current?.Value ?? string.Empty;
+        var path = request.Target.Path.ToString();
 
         // /api/auth 不需要会话验证（访客尚未登录）
         // 非 /api/ 路径也不需要验证（静态文件）
