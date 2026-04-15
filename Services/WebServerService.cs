@@ -2,6 +2,7 @@ using GenHTTP.Api.Infrastructure;
 using GenHTTP.Engine.Internal;
 using GenHTTP.Modules.IO;
 using GenHTTP.Modules.Practices;
+using GenHTTP.Modules.StaticWebsites;
 using GenHTTP.Modules.Webservices;
 using Shared_Joy.WebHost.Endpoints;
 using Shared_Joy.WebHost.Middleware;
@@ -76,12 +77,13 @@ public class WebServerService : IWebServerService
             .Add(new RateLimitGuardBuilder())
             .Add(new GuestSessionGuardBuilder(_sessionManager));
 
-        // 如果静态资源目录存在，添加静态文件服务
+        // 如果静态资源目录存在，添加静态网站服务（自动将 index.html 映射到 /）
         if (!string.IsNullOrEmpty(_assetService.WebRootPath) &&
             Directory.Exists(_assetService.WebRootPath))
         {
             var tree = ResourceTree.FromDirectory(_assetService.WebRootPath);
-            rootLayout.Add(Resources.From(tree));
+            var website = StaticWebsite.From(tree).AddIndex("index.html");
+            rootLayout.Fallback(website);
         }
 
         // 启动 GenHTTP 服务器

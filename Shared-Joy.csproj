@@ -72,6 +72,7 @@
 		<PackageReference Include="GenHTTP.Core" Version="10.5.0" />
 		<PackageReference Include="GenHTTP.Modules.IO" Version="10.5.0" />
 		<PackageReference Include="GenHTTP.Modules.Practices" Version="10.5.0" />
+		<PackageReference Include="GenHTTP.Modules.StaticWebsites" Version="10.5.0" />
 		<PackageReference Include="GenHTTP.Modules.Webservices" Version="10.5.0" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.50" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />

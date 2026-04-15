@@ -1,0 +1,304 @@
+/* ── 基础重置 & CSS 变量 ── */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --bg: #121212;
+    --surface: #1e1e1e;
+    --surface-hover: #282828;
+    --primary: #1db954;
+    --primary-hover: #1ed760;
+    --text: #ffffff;
+    --text-secondary: #b3b3b3;
+    --text-muted: #727272;
+    --error: #e74c3c;
+    --border: #333;
+    --radius: 10px;
+    --radius-sm: 6px;
+}
+
+html, body {
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* ── 视图切换 ── */
+.view { display: none; }
+.view.active { display: block; }
+
+/* ── PIN 认证界面 ── */
+.auth-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+}
+
+.app-title {
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 8px;
+}
+
+.app-subtitle {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+}
+
+#pin-input {
+    width: 200px;
+    font-size: 2rem;
+    text-align: center;
+    letter-spacing: 0.5em;
+    padding: 12px 16px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+#pin-input:focus {
+    border-color: var(--primary);
+}
+
+.error-text {
+    color: var(--error);
+    font-size: 0.9rem;
+    margin-top: 12px;
+}
+
+.hidden { display: none !important; }
+
+/* ── 按钮 ── */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    touch-action: manipulation;
+    min-height: 44px;
+}
+
+.btn:active { transform: scale(0.96); }
+
+.btn-primary {
+    background: var(--primary);
+    color: #fff;
+    margin-top: 20px;
+    width: 200px;
+}
+
+.btn-primary:hover { background: var(--primary-hover); }
+
+.btn-vote {
+    background: var(--surface-hover);
+    color: var(--primary);
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    border-radius: 50px;
+    min-width: 70px;
+}
+
+.btn-vote.voted {
+    background: var(--primary);
+    color: #fff;
+}
+
+/* ── 卡片 ── */
+.card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin: 12px;
+}
+
+/* ── Now Playing ── */
+.np-empty {
+    text-align: center;
+    padding: 20px 0;
+    color: var(--text-muted);
+}
+
+.np-icon { font-size: 2.5rem; }
+
+.np-content {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+}
+
+.np-album-art {
+    width: 72px;
+    height: 72px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.np-info { flex: 1; min-width: 0; }
+
+.np-track {
+    font-size: 1rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.np-artist {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 2px;
+}
+
+.np-progress-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-top: 10px;
+    overflow: hidden;
+}
+
+.np-progress-fill {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 2px;
+    width: 0%;
+    transition: width 0.5s linear;
+}
+
+.np-time {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* ── 搜索 ── */
+#search-input {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 50px;
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+#search-input:focus {
+    border-color: var(--primary);
+}
+
+.search-results {
+    margin-top: 10px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* ── 曲目列表项（搜索结果 + 队列通用） ── */
+.track-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.track-item:last-child { border-bottom: none; }
+
+.track-art {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.track-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.track-name {
+    font-size: 0.95rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.track-artist {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.track-action { flex-shrink: 0; }
+
+/* ── 投票队列 ── */
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.vote-queue .empty-hint {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 16px 0;
+    font-size: 0.9rem;
+}
+
+.vote-count {
+    font-size: 0.8rem;
+    color: var(--primary);
+    font-weight: 600;
+    margin-top: 2px;
+}
+
+/* ── 投票动画 ── */
+@keyframes vote-pop {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.vote-anim {
+    animation: vote-pop 0.3s ease;
+}
+
+/* ── 滚动条 ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ── 小屏适配 ── */
+@media (max-width: 400px) {
+    .card { margin: 8px; padding: 12px; }
+    .np-album-art { width: 56px; height: 56px; }
+    .track-art { width: 40px; height: 40px; }
+}

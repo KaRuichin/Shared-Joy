@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Shared_Joy.Helpers;
 using Shared_Joy.Models;
 using Shared_Joy.Services;
 
@@ -7,9 +8,10 @@ namespace Shared_Joy.ViewModels;
 
 /// <summary>
 /// 主面板 ViewModel —— 当前播放/QR码/PIN/投票队列/会话控制
-/// 
+///
 /// 播放状态通过定时轮询（3 秒）从 Spotify API 获取，
 /// 进度条在两次轮询之间通过本地计时器（每 500ms）平滑更新。
+/// 会话启动后同步启动投票队列轮询和访客数量更新。
 /// </summary>
 public partial class DashboardViewModel : ObservableObject
 {
@@ -18,6 +20,7 @@ public partial class DashboardViewModel : ObservableObject
     private readonly ISpotifyApiService _spotifyApi;
     private readonly ISpotifyAuthService _spotifyAuth;
     private readonly IWebServerService _webServer;
+    private readonly IQueueSyncService _queueSync;
 
     // 播放状态轮询定时器（每 3 秒从 Spotify API 拉取）
     private IDispatcherTimer? _playbackPollTimer;
@@ -31,13 +34,15 @@ public partial class DashboardViewModel : ObservableObject
         IVotingEngine votingEngine,
         ISpotifyApiService spotifyApi,
         ISpotifyAuthService spotifyAuth,
-        IWebServerService webServer)
+        IWebServerService webServer,
+        IQueueSyncService queueSync)
     {
         _sessionManager = sessionManager;
         _votingEngine = votingEngine;
         _spotifyApi = spotifyApi;
         _spotifyAuth = spotifyAuth;
         _webServer = webServer;
+        _queueSync = queueSync;
     }
 
     #region 可观察属性
@@ -205,6 +210,9 @@ public partial class DashboardViewModel : ObservableObject
             }
 
             PlayPauseButtonText = IsPlaying ? "⏸ Pause" : "▶ Play";
+
+            // 会话活跃时同步刷新投票队列和访客数
+            RefreshVoteQueue();
         }
         catch (Exception ex)
         {
@@ -312,18 +320,82 @@ public partial class DashboardViewModel : ObservableObject
 
     #region 会话控制
 
-    /// <summary>启动会话</summary>
+    /// <summary>启动会话：生成 PIN → 启动 Web 服务器 → 启动队列同步 → 生成 QR 码</summary>
     [RelayCommand]
-    private void StartSession()
+    private async Task StartSessionAsync()
     {
-        // TODO: Phase 8 实现启动会话逻辑
+        try
+        {
+            // 生成 PIN 并启动会话
+            var pin = _sessionManager.StartSession();
+            PinCode = pin;
+            IsSessionActive = true;
+
+            // 启动嵌入式 Web 服务器
+            await _webServer.StartAsync();
+
+            // 启动后台队列同步
+            await _queueSync.StartAsync();
+
+            // 生成 QR 码（指向服务器地址）
+            var ip = NetworkHelper.GetLocalIpAddress();
+            var url = $"http://{ip}:{_webServer.Port}/";
+            QrCodeImage = QrCodeGenerator.GenerateQrCode(url);
+
+            // 初始化投票队列和访客数
+            RefreshVoteQueue();
+            GuestCount = _sessionManager.GuestCount;
+
+            System.Diagnostics.Debug.WriteLine($"[Dashboard] 会话已启动, PIN={pin}, URL={url}");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Dashboard] 启动会话异常: {ex.Message}");
+            IsSessionActive = false;
+        }
     }
 
-    /// <summary>结束会话</summary>
+    /// <summary>结束会话：停止队列同步 → 停止 Web 服务器 → 清理投票 → 清理会话</summary>
     [RelayCommand]
-    private void EndSession()
+    private async Task EndSessionAsync()
     {
-        // TODO: Phase 8 实现结束会话逻辑
+        try
+        {
+            // 停止后台队列同步
+            await _queueSync.StopAsync();
+
+            // 停止 Web 服务器
+            await _webServer.StopAsync();
+
+            // 清空投票池
+            _votingEngine.Clear();
+
+            // 结束会话（清理 PIN 和访客数据）
+            _sessionManager.EndSession();
+
+            // 重置 UI 状态
+            IsSessionActive = false;
+            PinCode = string.Empty;
+            QrCodeImage = null;
+            GuestCount = 0;
+            VoteQueue = [];
+
+            System.Diagnostics.Debug.WriteLine("[Dashboard] 会话已结束");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Dashboard] 结束会话异常: {ex.Message}");
+        }
+    }
+
+    /// <summary>刷新投票队列和访客数（由播放状态轮询附带调用）</summary>
+    private void RefreshVoteQueue()
+    {
+        if (!_sessionManager.IsSessionActive)
+            return;
+
+        VoteQueue = _votingEngine.GetRankedQueue();
+        GuestCount = _sessionManager.GuestCount;
     }
 
     #endregion
