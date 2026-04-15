@@ -20,37 +20,58 @@
         <!-- 队列列表 -->
         <CollectionView Grid.Row="1"
                 ItemsSource="{Binding VoteQueue}"
-                EmptyView="Queue is empty">
+                EmptyView="Queue is empty"
+                SelectionMode="Single">
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="m:VoteItem">
-                    <Border Padding="8"
-                            Margin="0,4"
-                            Stroke="LightGray"
-                            StrokeShape="RoundRectangle 8">
+                    <Border Padding="12"
+                            Margin="0,6"
+                            Stroke="DimGray"
+                            StrokeShape="RoundRectangle 8"
+                            StrokeThickness="1">
                         <Grid ColumnDefinitions="*,Auto,Auto,Auto"
-                                ColumnSpacing="8">
+                                ColumnSpacing="12">
+                            <!-- 歌曲信息 -->
                             <VerticalStackLayout Grid.Column="0"
-                                    VerticalOptions="Center">
+                                    VerticalOptions="Center"
+                                    Spacing="2">
                                 <Label Text="{Binding Track.Name}"
-                                        FontSize="16"/>
+                                        FontSize="16"
+                                        FontAttributes="Bold"
+                                        LineBreakMode="TailTruncation"
+                                        MaxLines="1"/>
                                 <Label Text="{Binding Track.Artists}"
                                         TextColor="Gray"
-                                        FontSize="12"/>
+                                        FontSize="13"
+                                        LineBreakMode="TailTruncation"
+                                        MaxLines="1"/>
                             </VerticalStackLayout>
+
+                            <!-- 投票数 -->
                             <Label Grid.Column="1"
                                     Text="{Binding VoteCount, StringFormat='🗳 {0}'}"
-                                   FontAttributes="Bold"
-                                    VerticalTextAlignment="Center"/>
-                            <!-- TODO: 绑定到 ViewModel 范围的 Command，需使用 RelativeSource -->
+                                    FontAttributes="Bold"
+                                    VerticalTextAlignment="Center"
+                                    FontSize="14"/>
+
+                            <!-- 置顶按钮 -->
                             <Button Grid.Column="2"
                                     Text="⬆ Top"
-                                    FontSize="12"
+                                    FontSize="11"
+                                    Padding="8,6"
+                                    WidthRequest="60"
+                                    Clicked="OnMoveToTopClicked"
                                     CommandParameter="{Binding Track.Id}"/>
+
+                            <!-- 移除按钮 -->
                             <Button Grid.Column="3"
                                     Text="✕ Remove"
-                                    FontSize="12"
-                                    BackgroundColor="Red"
+                                    FontSize="11"
+                                    Padding="8,6"
+                                    WidthRequest="70"
+                                    BackgroundColor="#E74C3C"
                                     TextColor="White"
+                                    Clicked="OnRemoveTrackClicked"
                                     CommandParameter="{Binding Track.Id}"/>
                         </Grid>
                     </Border>
@@ -59,16 +80,29 @@
         </CollectionView>
 
         <!-- 底部操作 -->
-        <HorizontalStackLayout Grid.Row="2"
-                HorizontalOptions="Center"
-                Spacing="16">
-            <Button Text="Refresh"
-                    Command="{Binding RefreshQueueCommand}"/>
-            <Button Text="Clear Queue"
-                    Command="{Binding ClearQueueCommand}"
-                    BackgroundColor="Orange"
-                    TextColor="White"/>
-        </HorizontalStackLayout>
+        <VerticalStackLayout Grid.Row="2"
+                Spacing="12">
+            <!-- 锁定状态提示 -->
+            <Label Text="{Binding LockedNextTrack.Track.Name, StringFormat='🔒 Locked Next: {0}'}"
+                    FontAttributes="Bold"
+                    TextColor="#1DB954"
+                    FontSize="13"
+                    HorizontalTextAlignment="Center"
+                    IsVisible="{Binding LockedNextTrack, Converter={StaticResource InvertedBoolConverter}, TargetNullValue='False'}"/>
+
+            <!-- 操作按钮 -->
+            <HorizontalStackLayout HorizontalOptions="Center"
+                    Spacing="16">
+                <Button Text="🔄 Refresh"
+                        Command="{Binding RefreshQueueCommand}"
+                        WidthRequest="120"/>
+                <Button Text="🗑 Clear Queue"
+                        Command="{Binding ClearQueueCommand}"
+                        BackgroundColor="#E67E22"
+                        TextColor="White"
+                        WidthRequest="140"/>
+            </HorizontalStackLayout>
+        </VerticalStackLayout>
 
     </Grid>
 
