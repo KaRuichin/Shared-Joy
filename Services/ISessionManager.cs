@@ -16,6 +16,9 @@ public interface ISessionManager
     /// <summary>在线访客数量</summary>
     int GuestCount { get; }
 
+    /// <summary>当前会话 ID（用于数据库记录关联）</summary>
+    string? SessionId { get; }
+
     /// <summary>启动新会话，生成 PIN 码</summary>
     string StartSession();
 

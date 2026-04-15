@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:genhttp.org)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "Bash(dotnet build *)"
+    ]
+  }
+}
