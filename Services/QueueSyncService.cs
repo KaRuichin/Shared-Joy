@@ -19,9 +19,6 @@ public class QueueSyncService : IQueueSyncService
     // 已推送到 Spotify 队列的 trackId 集合，防止重复推送
     private readonly HashSet<string> _pushedTrackIds = [];
 
-    // 上次成功推送的时间（用于防止 Spotify API 传播延迟导致的重复推送）
-    private DateTime _lastPushTime = DateTime.MinValue;
-
     // 防止 TriggerSyncAsync 和 SyncLoopAsync 并发执行 TrySyncAsync（竞态条件）
     private readonly SemaphoreSlim _syncLock = new(1, 1);
 
@@ -46,7 +43,6 @@ public class QueueSyncService : IQueueSyncService
 
         _cts = new CancellationTokenSource();
         _pushedTrackIds.Clear();
-        _lastPushTime = DateTime.MinValue;
         IsRunning = true;
 
         _syncTask = Task.Run(() => SyncLoopAsync(_cts.Token));
@@ -77,7 +73,6 @@ public class QueueSyncService : IQueueSyncService
         }
 
         _pushedTrackIds.Clear();
-        _lastPushTime = DateTime.MinValue;
         System.Diagnostics.Debug.WriteLine("[QueueSync] 后台同步已停止");
     }
 
@@ -165,59 +160,29 @@ public class QueueSyncService : IQueueSyncService
     }
 
     /// <summary>
-    /// 单次同步：检查 Spotify 队列状态，按需推送高票歌曲
+    /// 单次同步：将投票最高且尚未推送过的歌曲添加到 Spotify 队列
     ///
-    /// 推送策略：
-    ///   1. 只统计我们自己推送的歌曲在 Spotify 队列中的数量（忽略播放列表/专辑歌曲）
-    ///      — 原来用 spotifyQueue.Count >= 3 会把播放列表的后续曲目也算进去，导致永远不推送
-    ///   2. 当我们的歌曲在队列中少于 2 首时，推送下一首高票歌曲
-    ///   3. 推送后设置冷却时间（10 秒），避免 Spotify API 传播延迟导致的重复推送
+    /// 防重复推送的核心机制：
+    ///   - _pushedTrackIds 记录本次会话已推送过的所有 trackId
+    ///   - 每首歌只会被推送一次（推送后立即加入集合 + 从投票池移除）
+    ///   - SemaphoreSlim 保证 TriggerSyncAsync 和 SyncLoopAsync 不会并发执行此方法
     /// </summary>
     private async Task TrySyncAsync()
     {
-        // 获取当前播放状态
+        // 获取当前播放状态（无活跃设备则无法入队）
         var playback = await _spotifyApi.GetCurrentPlaybackAsync();
         if (playback is null)
-            return; // 无活跃设备，跳过
+            return;
 
         // 获取投票排行榜
         var ranked = _votingEngine.GetRankedQueue();
         if (ranked.Count == 0)
-            return; // 没有待投票歌曲
-
-        // 获取 Spotify 队列
-        var spotifyQueue = await _spotifyApi.GetQueueAsync();
-
-        // 只统计我们自己推送的歌曲还有多少在 Spotify 队列等待播放
-        // 注意：不能用 spotifyQueue.Count，那包含了播放列表/专辑的后续曲目，
-        //       会导致在播放列表时始终满足"队列充足"条件，投票歌曲永远不被推送
-        var ourSongsInQueue = _pushedTrackIds.Count(id => spotifyQueue.Any(t => t.Id == id));
-
-        // 已推送但尚未出现在 Spotify 队列中（API 传播延迟），避免重复推送
-        var unconfirmedCount = _pushedTrackIds.Count - ourSongsInQueue;
-        if (unconfirmedCount > 0)
-        {
-            // 推送后 10 秒内未确认，等待下一轮再判断
-            var secondsSinceLastPush = (DateTime.UtcNow - _lastPushTime).TotalSeconds;
-            if (secondsSinceLastPush < 10)
-            {
-                System.Diagnostics.Debug.WriteLine(
-                    $"[QueueSync] 等待推送确认（{unconfirmedCount} 首待确认，距上次推送 {secondsSinceLastPush:F1}s）");
-                return;
-            }
-            // 超过 10 秒仍未确认，可能歌曲已播放完或推送失败，允许继续
-            System.Diagnostics.Debug.WriteLine(
-                $"[QueueSync] 推送超时未确认（{unconfirmedCount} 首），继续尝试推送");
-        }
-
-        // 我们的歌曲在 Spotify 队列中已有 2 首，等待播放后再补充
-        if (ourSongsInQueue >= 2)
             return;
 
-        // 找到第一首尚未推送过的歌曲
+        // 找到票数最高且本次会话尚未推送过的歌曲
         var candidate = ranked.FirstOrDefault(v => !_pushedTrackIds.Contains(v.Track.Id));
         if (candidate is null)
-            return; // 所有高票歌曲都已推送
+            return;
 
         // 推送到 Spotify 队列：优先指定当前播放设备；失败则降级重试一次（不指定设备）
         var success = await _spotifyApi.AddToQueueAsync(candidate.Track.Uri, playback.DeviceId);
@@ -235,9 +200,8 @@ public class QueueSyncService : IQueueSyncService
             }
         }
 
-        // 标记为已推送，记录推送时间，从投票池移除
+        // 立即标记为已推送并从投票池移除，防止下一轮同步重复推送
         _pushedTrackIds.Add(candidate.Track.Id);
-        _lastPushTime = DateTime.UtcNow;
         _votingEngine.RemoveTrack(candidate.Track.Id);
 
         // 记录播放历史

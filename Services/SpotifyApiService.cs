@@ -142,7 +142,9 @@ public class SpotifyApiService : ISpotifyApiService
 
             var response = await SendWithRetryAsync(HttpMethod.Post, url);
 
-            var success = response?.StatusCode == HttpStatusCode.NoContent;
+            // Spotify 文档规定成功返回 204，但某些设备/客户端版本实际返回 200
+            // 使用 IsSuccessStatusCode（接受所有 2xx）而非 == NoContent，防止误判为失败
+            var success = response?.IsSuccessStatusCode == true;
 
             if (!success)
             {
@@ -154,7 +156,7 @@ public class SpotifyApiService : ISpotifyApiService
             else
             {
                 System.Diagnostics.Debug.WriteLine(
-                    $"[SpotifyApi] 添加到队列成功: uri={trackUri}, deviceId={deviceId ?? "<none>"}");
+                    $"[SpotifyApi] 添加到队列成功: uri={trackUri}, status={response!.StatusCode}, deviceId={deviceId ?? "<none>"}");
             }
             return success;
         }
