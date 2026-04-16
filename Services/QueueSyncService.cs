@@ -19,6 +19,12 @@ public class QueueSyncService : IQueueSyncService
     // 已推送到 Spotify 队列的 trackId 集合，防止重复推送
     private readonly HashSet<string> _pushedTrackIds = [];
 
+    // 上次成功推送的时间（用于防止 Spotify API 传播延迟导致的重复推送）
+    private DateTime _lastPushTime = DateTime.MinValue;
+
+    // 防止 TriggerSyncAsync 和 SyncLoopAsync 并发执行 TrySyncAsync（竞态条件）
+    private readonly SemaphoreSlim _syncLock = new(1, 1);
+
     public QueueSyncService(
         IVotingEngine votingEngine,
         ISpotifyApiService spotifyApi,
@@ -40,6 +46,7 @@ public class QueueSyncService : IQueueSyncService
 
         _cts = new CancellationTokenSource();
         _pushedTrackIds.Clear();
+        _lastPushTime = DateTime.MinValue;
         IsRunning = true;
 
         _syncTask = Task.Run(() => SyncLoopAsync(_cts.Token));
@@ -70,6 +77,7 @@ public class QueueSyncService : IQueueSyncService
         }
 
         _pushedTrackIds.Clear();
+        _lastPushTime = DateTime.MinValue;
         System.Diagnostics.Debug.WriteLine("[QueueSync] 后台同步已停止");
     }
 
@@ -81,6 +89,10 @@ public class QueueSyncService : IQueueSyncService
         if (!IsRunning)
             return;
 
+        // 如果当前已有同步在运行，跳过本次触发（避免与 SyncLoopAsync 竞争）
+        if (!await _syncLock.WaitAsync(0))
+            return;
+
         try
         {
             await TrySyncAsync();
@@ -88,6 +100,10 @@ public class QueueSyncService : IQueueSyncService
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"[QueueSync] 触发同步异常: {ex.Message}");
+        }
+        finally
+        {
+            _syncLock.Release();
         }
     }
 
@@ -98,13 +114,22 @@ public class QueueSyncService : IQueueSyncService
     private async Task SyncLoopAsync(CancellationToken ct)
     {
         // 启动时立即执行一次同步，无需等待
+        await _syncLock.WaitAsync(ct);
         try
         {
             await TrySyncAsync();
         }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"[QueueSync] 初始同步异常: {ex.Message}");
+        }
+        finally
+        {
+            _syncLock.Release();
         }
 
         // 然后定期检查
@@ -119,22 +144,34 @@ public class QueueSyncService : IQueueSyncService
                 break;
             }
 
+            await _syncLock.WaitAsync(ct);
             try
             {
                 await TrySyncAsync();
             }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[QueueSync] 同步异常: {ex.Message}");
+            }
+            finally
+            {
+                _syncLock.Release();
             }
         }
     }
 
     /// <summary>
     /// 单次同步：检查 Spotify 队列状态，按需推送高票歌曲
-    /// 
-    /// 推送策略：当投票队列非空且队列中没有待推送歌曲时，立即推送最高票歌曲
-    /// 如果已推送歌曲未在 Spotify 中出现，说明有网络延迟，稍后重试
+    ///
+    /// 推送策略：
+    ///   1. 只统计我们自己推送的歌曲在 Spotify 队列中的数量（忽略播放列表/专辑歌曲）
+    ///      — 原来用 spotifyQueue.Count >= 3 会把播放列表的后续曲目也算进去，导致永远不推送
+    ///   2. 当我们的歌曲在队列中少于 2 首时，推送下一首高票歌曲
+    ///   3. 推送后设置冷却时间（10 秒），避免 Spotify API 传播延迟导致的重复推送
     /// </summary>
     private async Task TrySyncAsync()
     {
@@ -148,20 +185,33 @@ public class QueueSyncService : IQueueSyncService
         if (ranked.Count == 0)
             return; // 没有待投票歌曲
 
-        // 获取 Spotify 队列，判断是否需要补充
+        // 获取 Spotify 队列
         var spotifyQueue = await _spotifyApi.GetQueueAsync();
 
-        // 【改进策略】更激进的推送逻辑：
-        //   - 如果 Spotify 队列为空或很少，立即推送高票歌曲
-        //   - 检查是否有已推送但未在队列中出现的歌曲（网络延迟场景）
-        //   - 只有当队列中已经有充足的待播放歌曲时，才跳过推送
+        // 只统计我们自己推送的歌曲还有多少在 Spotify 队列等待播放
+        // 注意：不能用 spotifyQueue.Count，那包含了播放列表/专辑的后续曲目，
+        //       会导致在播放列表时始终满足"队列充足"条件，投票歌曲永远不被推送
+        var ourSongsInQueue = _pushedTrackIds.Count(id => spotifyQueue.Any(t => t.Id == id));
 
-        // 检查是否有已推送歌曲已出现在 Spotify 队列中（确认推送成功）
-        var confirmedInQueue = _pushedTrackIds.Where(id => spotifyQueue.Any(t => t.Id == id)).ToList();
-        var unconfirmedCount = _pushedTrackIds.Count - confirmedInQueue.Count;
+        // 已推送但尚未出现在 Spotify 队列中（API 传播延迟），避免重复推送
+        var unconfirmedCount = _pushedTrackIds.Count - ourSongsInQueue;
+        if (unconfirmedCount > 0)
+        {
+            // 推送后 10 秒内未确认，等待下一轮再判断
+            var secondsSinceLastPush = (DateTime.UtcNow - _lastPushTime).TotalSeconds;
+            if (secondsSinceLastPush < 10)
+            {
+                System.Diagnostics.Debug.WriteLine(
+                    $"[QueueSync] 等待推送确认（{unconfirmedCount} 首待确认，距上次推送 {secondsSinceLastPush:F1}s）");
+                return;
+            }
+            // 超过 10 秒仍未确认，可能歌曲已播放完或推送失败，允许继续
+            System.Diagnostics.Debug.WriteLine(
+                $"[QueueSync] 推送超时未确认（{unconfirmedCount} 首），继续尝试推送");
+        }
 
-        // 如果队列充足（保持至少 3 首待播歌曲）且没有待确认的推送，则不急于推送
-        if (spotifyQueue.Count >= 3 && unconfirmedCount == 0)
+        // 我们的歌曲在 Spotify 队列中已有 2 首，等待播放后再补充
+        if (ourSongsInQueue >= 2)
             return;
 
         // 找到第一首尚未推送过的歌曲
@@ -174,19 +224,20 @@ public class QueueSyncService : IQueueSyncService
         if (!success)
         {
             System.Diagnostics.Debug.WriteLine(
-                $"[QueueSync] 指定设备入队失败，降级重试: track={candidate.Track.Name}, deviceId={playback.DeviceId}, deviceName={playback.DeviceName}");
+                $"[QueueSync] 指定设备入队失败，降级重试: track={candidate.Track.Name}, deviceId={playback.DeviceId}");
 
             success = await _spotifyApi.AddToQueueAsync(candidate.Track.Uri);
             if (!success)
             {
                 System.Diagnostics.Debug.WriteLine(
-                    $"[QueueSync] 入队最终失败: track={candidate.Track.Name}, uri={candidate.Track.Uri}, deviceId={playback.DeviceId}, deviceName={playback.DeviceName}");
+                    $"[QueueSync] 入队最终失败: track={candidate.Track.Name}, uri={candidate.Track.Uri}");
                 return;
             }
         }
 
-        // 标记为已推送，从投票池移除
+        // 标记为已推送，记录推送时间，从投票池移除
         _pushedTrackIds.Add(candidate.Track.Id);
+        _lastPushTime = DateTime.UtcNow;
         _votingEngine.RemoveTrack(candidate.Track.Id);
 
         // 记录播放历史

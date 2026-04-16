@@ -14,6 +14,7 @@ namespace Shared_Joy.ViewModels;
 /// 3. 移除指定歌曲（从投票池删除）
 /// 4. 锁定下一首（绕过票数排序，强制指定歌曲先入Spotify队列）
 /// 5. 清空整个队列
+/// 6. 显示播放历史（从 SQLite 数据库查询）
 ///
 /// 与 QueueSyncService 的交互：
 /// - 当设置了 LockedNextTrack 时，QueueSyncService 优先推送该歌曲
@@ -23,14 +24,16 @@ public partial class QueueManagementViewModel : ObservableObject
 {
     private readonly IVotingEngine _votingEngine;
     private readonly ISessionManager _sessionManager;
+    private readonly IDatabaseService _database;
 
     // 队列刷新定时器（页面显示时启动，用于实时更新）
     private IDispatcherTimer? _queueRefreshTimer;
 
-    public QueueManagementViewModel(IVotingEngine votingEngine, ISessionManager sessionManager)
+    public QueueManagementViewModel(IVotingEngine votingEngine, ISessionManager sessionManager, IDatabaseService database)
     {
         _votingEngine = votingEngine;
         _sessionManager = sessionManager;
+        _database = database;
     }
 
     #region 可观察属性
@@ -43,11 +46,15 @@ public partial class QueueManagementViewModel : ObservableObject
     [ObservableProperty]
     private VoteItem? _lockedNextTrack;
 
+    /// <summary>播放历史记录列表（最新的歌曲在前）</summary>
+    [ObservableProperty]
+    private List<PlayHistory> _playHistoryList = [];
+
     #endregion
 
     #region 生命周期（由页面调用）
 
-    /// <summary>页面出现时启动队列刷新定时器</summary>
+    /// <summary>页面出现时启动队列刷新定时器，并加载播放历史</summary>
     public void OnPageAppearing()
     {
         if (_queueRefreshTimer is null)
@@ -58,6 +65,9 @@ public partial class QueueManagementViewModel : ObservableObject
         }
         _queueRefreshTimer.Start();
         RefreshQueueInternal();
+
+        // 加载播放历史
+        _ = LoadPlayHistoryAsync();
     }
 
     /// <summary>页面消失时停止队列刷新定时器</summary>
@@ -69,6 +79,32 @@ public partial class QueueManagementViewModel : ObservableObject
     #endregion
 
     #region 队列操作命令
+
+    /// <summary>
+    /// 加载当前会话的播放历史
+    /// </summary>
+    private async Task LoadPlayHistoryAsync()
+    {
+        try
+        {
+            var sessionId = _sessionManager.SessionId;
+            if (string.IsNullOrEmpty(sessionId))
+            {
+                PlayHistoryList = [];
+                return;
+            }
+
+            var history = await _database.GetPlayHistoryAsync(sessionId);
+            PlayHistoryList = history;
+
+            System.Diagnostics.Debug.WriteLine($"[QueueManagement] 加载播放历史: {history.Count} 条记录");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[QueueManagement] 加载历史异常: {ex.Message}");
+            PlayHistoryList = [];
+        }
+    }
 
     /// <summary>
     /// 刷新队列 —— 从投票引擎拉取最新排序并更新 UI

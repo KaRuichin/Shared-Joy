@@ -1,5 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Maui.Controls;
+using Microsoft.Maui.Devices;
 using Shared_Joy.Helpers;
 using Shared_Joy.Models;
 using Shared_Joy.Services;
@@ -326,6 +328,16 @@ public partial class DashboardViewModel : ObservableObject
     {
         try
         {
+            // 设备震动反馈
+            try
+            {
+                HapticFeedback.Default.Perform(HapticFeedbackType.Click);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[Dashboard] 设备震动异常（不影响功能）: {ex.Message}");
+            }
+
             // 生成 PIN 并启动会话
             var pin = _sessionManager.StartSession();
             PinCode = pin;

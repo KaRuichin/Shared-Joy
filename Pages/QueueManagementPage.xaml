@@ -7,7 +7,7 @@
              x:DataType="vm:QueueManagementViewModel"
              Title="Queue">
 
-        <Grid RowDefinitions="Auto,*,Auto"
+        <Grid RowDefinitions="Auto,*,Auto,*,Auto"
               Padding="20"
               RowSpacing="16">
 
@@ -79,8 +79,62 @@
                         </CollectionView.ItemTemplate>
                 </CollectionView>
 
-                <!-- 底部操作 -->
+                <!-- 播放历史部分标题和分隔 -->
                 <VerticalStackLayout Grid.Row="2"
+                                     Margin="0,12,0,0"
+                                     Spacing="8">
+                        <BoxView HeightRequest="1"
+                                        Color="LightGray"/>
+                        <Label Text="📜 Play History"
+                               FontAttributes="Bold"
+                               FontSize="16"/>
+                </VerticalStackLayout>
+
+                <!-- 播放历史列表 -->
+                <CollectionView Grid.Row="3"
+                                ItemsSource="{Binding PlayHistoryList}"
+                                EmptyView="No play history yet"
+                                SelectionMode="None">
+                        <CollectionView.ItemTemplate>
+                                <DataTemplate x:DataType="m:PlayHistory">
+                                        <Border Padding="12"
+                                                Margin="0,4"
+                                                Stroke="LightGray"
+                                                StrokeShape="RoundRectangle 6"
+                                                StrokeThickness="1"
+                                                Background="#F5F5F5">
+                                                <Grid ColumnDefinitions="*,Auto"
+                                                      ColumnSpacing="12">
+                                                        <!-- 歌曲信息 -->
+                                                        <VerticalStackLayout Grid.Column="0"
+                                                                             VerticalOptions="Center"
+                                                                             Spacing="2">
+                                                                <Label Text="{Binding TrackName}"
+                                                                       FontSize="14"
+                                                                       FontAttributes="Bold"
+                                                                       LineBreakMode="TailTruncation"
+                                                                       MaxLines="1"/>
+                                                                <Label Text="{Binding Artists}"
+                                                                       TextColor="Gray"
+                                                                       FontSize="12"
+                                                                       LineBreakMode="TailTruncation"
+                                                                       MaxLines="1"/>
+                                                        </VerticalStackLayout>
+
+                                                        <!-- 播放时间 -->
+                                                        <Label Grid.Column="1"
+                                                               Text="{Binding PlayedAt, StringFormat='{0:HH:mm:ss}'}"
+                                                               TextColor="Gray"
+                                                               FontSize="11"
+                                                               VerticalTextAlignment="Center"/>
+                                                </Grid>
+                                        </Border>
+                                </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <!-- 底部操作 -->
+                <VerticalStackLayout Grid.Row="4"
                                      Spacing="12">
                         <!-- 锁定状态提示 -->
                         <Label Text="{Binding LockedNextTrack.Track.Name, StringFormat='🔒 Locked Next: {0}'}"
