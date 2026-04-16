@@ -121,11 +121,21 @@ public partial class QueueManagementViewModel : ObservableObject
     {
         if (!_sessionManager.IsSessionActive)
         {
-            VoteQueue = [];
+            if (VoteQueue.Count > 0)
+                VoteQueue = [];
             return;
         }
 
-        VoteQueue = _votingEngine.GetRankedQueue();
+        var newQueue = _votingEngine.GetRankedQueue();
+
+        // 仅在内容实际变化时才赋值，避免 CollectionView 因无谓替换而闪烁
+        var changed = newQueue.Count != VoteQueue.Count ||
+                      !newQueue.Select(v => (v.Track.Id, v.VoteCount))
+                               .SequenceEqual(VoteQueue.Select(v => (v.Track.Id, v.VoteCount)));
+        if (!changed)
+            return;
+
+        VoteQueue = newQueue;
     }
 
     /// <summary>
