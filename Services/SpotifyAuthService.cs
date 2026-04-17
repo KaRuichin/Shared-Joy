@@ -134,13 +134,14 @@ public class SpotifyAuthService : ISpotifyAuthService
         await _tokenLock.WaitAsync();
         try
         {
-            if (_accessToken is null)
+            // 无 refresh_token 则无法获取任何有效令牌
+            if (_refreshToken is null)
                 return null;
 
-            // 提前 60 秒刷新，避免边界情况
-            if (DateTime.UtcNow.AddSeconds(60) >= _tokenExpiry)
+            // access_token 缺失或即将过期（提前 60 秒），用 refresh_token 刷新
+            if (_accessToken is null || DateTime.UtcNow.AddSeconds(60) >= _tokenExpiry)
             {
-                System.Diagnostics.Debug.WriteLine("[SpotifyAuth] 令牌即将过期，自动刷新");
+                System.Diagnostics.Debug.WriteLine("[SpotifyAuth] 令牌缺失或即将过期，自动刷新");
                 var refreshed = await RefreshAccessTokenAsync();
                 if (!refreshed)
                 {
@@ -209,8 +210,10 @@ public class SpotifyAuthService : ISpotifyAuthService
                 var refreshed = await RefreshAccessTokenAsync();
                 if (!refreshed)
                 {
-                    System.Diagnostics.Debug.WriteLine("[SpotifyAuth] refresh_token 刷新失败，需要重新授权");
-                    await LogoutAsync();
+                    // 刷新失败（可能是临时网络问题）：仅清除内存中的 access_token，
+                    // 保留 _refreshToken 和存储中的凭证，下次调用 GetAccessTokenAsync 时会自动重试
+                    _accessToken = null;
+                    System.Diagnostics.Debug.WriteLine("[SpotifyAuth] 刷新暂时失败，保留存储凭证供下次重试");
                     return false;
                 }
             }

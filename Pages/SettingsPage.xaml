@@ -22,9 +22,41 @@
                             FontAttributes="Bold"
                             FontSize="20"/>
 
+                     <!-- Client ID 已配置：只显示脱敏状态 + 删除按钮 -->
+                     <Border Padding="16"
+                             Stroke="#1DB954"
+                             StrokeShape="RoundRectangle 8"
+                             IsVisible="{Binding IsClientIdSaved}">
+                            <VerticalStackLayout Spacing="12">
+                                   <Label Text="Client ID"
+                                          FontAttributes="Bold"/>
+                                   <HorizontalStackLayout Spacing="10"
+                                                          VerticalOptions="Center">
+                                          <Label Text="✅"
+                                                 FontSize="18"
+                                                 VerticalOptions="Center"/>
+                                          <Label Text="Client ID is configured"
+                                                 FontSize="14"
+                                                 FontAttributes="Bold"
+                                                 TextColor="#1DB954"
+                                                 VerticalOptions="Center"/>
+                                   </HorizontalStackLayout>
+                                   <Label Text="The Client ID value is hidden for security. Remove it below to reconfigure."
+                                          TextColor="Gray"
+                                          FontSize="12"/>
+                                   <Button Text="🗑 Remove Client ID"
+                                           Command="{Binding ClearClientIdCommand}"
+                                           BackgroundColor="#E74C3C"
+                                           TextColor="White"
+                                           IsEnabled="{Binding IsBusy, Converter={toolkit:InvertedBoolConverter}}"/>
+                            </VerticalStackLayout>
+                     </Border>
+
+                     <!-- Client ID 未配置：显示输入框 + 保存按钮 -->
                      <Border Padding="16"
                              Stroke="LightGray"
-                             StrokeShape="RoundRectangle 8">
+                             StrokeShape="RoundRectangle 8"
+                             IsVisible="{Binding IsClientIdSaved, Converter={toolkit:InvertedBoolConverter}}">
                             <VerticalStackLayout Spacing="12">
                                    <Label Text="Client ID"
                                           FontAttributes="Bold"/>

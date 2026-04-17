@@ -21,8 +21,9 @@ public partial class SettingsViewModel : ObservableObject
         // 监听认证状态变更
         _authService.AuthenticationChanged += OnAuthenticationChanged;
 
-        // 从 Preferences 恢复 Client ID
+        // 从 Preferences 恢复 Client ID，并同步初始化已保存状态
         _clientId = Preferences.Get(KeyClientId, string.Empty);
+        _isClientIdSaved = !string.IsNullOrWhiteSpace(_clientId);
     }
 
     /// <summary>Spotify Client ID</summary>
@@ -90,6 +91,17 @@ public partial class SettingsViewModel : ObservableObject
         System.Diagnostics.Debug.WriteLine($"[Settings] Client ID 已保存: {trimmedId[..Math.Min(8, trimmedId.Length)]}...");
 
         await Task.CompletedTask;
+    }
+
+    /// <summary>清除已保存的 Client ID（重新配置）</summary>
+    [RelayCommand]
+    private void ClearClientId()
+    {
+        Preferences.Remove(KeyClientId);
+        ClientId = string.Empty;
+        IsClientIdSaved = false;
+        StatusMessage = string.Empty;
+        System.Diagnostics.Debug.WriteLine("[Settings] Client ID 已清除");
     }
 
     /// <summary>登录 Spotify（启动 PKCE 认证流程）</summary>
