@@ -24,6 +24,9 @@ public partial class SettingsViewModel : ObservableObject
         // 从 Preferences 恢复 Client ID，并同步初始化已保存状态
         _clientId = Preferences.Get(KeyClientId, string.Empty);
         _isClientIdSaved = !string.IsNullOrWhiteSpace(_clientId);
+
+        // App 启动时已异步恢复令牌；在此同步读取已有状态，避免页面初次显示时闪烁"未登录"
+        _isLoggedIn = _authService.IsAuthenticated;
     }
 
     /// <summary>Spotify Client ID</summary>
@@ -60,12 +63,21 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private async Task InitializeAsync()
     {
-        // 尝试恢复已保存的令牌
-        var restored = await _authService.TryRestoreTokenAsync();
-        if (restored)
+        // 令牌已由 App 启动时的 TryRestoreTokenAsync 恢复，直接加载用户信息；
+        // 否则尝试从持久化存储恢复（兼容冷启动直接打开 SettingsPage 的极端情况）
+        if (_authService.IsAuthenticated)
         {
             IsLoggedIn = true;
             await LoadUserInfoAsync();
+        }
+        else
+        {
+            var restored = await _authService.TryRestoreTokenAsync();
+            if (restored)
+            {
+                IsLoggedIn = true;
+                await LoadUserInfoAsync();
+            }
         }
 
         IsClientIdSaved = !string.IsNullOrWhiteSpace(Preferences.Get(KeyClientId, string.Empty));
