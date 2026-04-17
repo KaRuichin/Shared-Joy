@@ -4,4 +4,6 @@
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 	<uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
 	<uses-permission android:name="android.permission.INTERNET" />
+	<!-- Android 13+ 需要显式声明才能发送通知 -->
+	<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 </manifest>

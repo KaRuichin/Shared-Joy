@@ -7,6 +7,9 @@ namespace Shared_Joy.Services;
 /// </summary>
 public interface IVotingEngine
 {
+    /// <summary>某首歌曲首次被投票（新点歌）时触发</summary>
+    event EventHandler<SpotifyTrack> NewTrackAdded;
+
     /// <summary>为歌曲投票</summary>
     bool Vote(string guestId, SpotifyTrack track);
 

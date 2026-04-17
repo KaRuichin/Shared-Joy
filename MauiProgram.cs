@@ -29,6 +29,7 @@ namespace Shared_Joy
             builder.Services.AddSingleton<ISessionManager, SessionManager>();
             builder.Services.AddSingleton<IQueueSyncService, QueueSyncService>();
             builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
+            builder.Services.AddSingleton<INotificationService, NotificationService>();
 
             // 注册 ViewModels
             builder.Services.AddTransient<DashboardViewModel>();

@@ -15,16 +15,25 @@ public class VotingEngine : IVotingEngine
     // VoteItem 内部的 VoterIds（HashSet）非线程安全，需用锁保护修改
     private readonly object _voteLock = new();
 
+    /// <summary>某首歌曲首次被投票（新点歌）时触发</summary>
+    public event EventHandler<SpotifyTrack>? NewTrackAdded;
+
     public bool Vote(string guestId, SpotifyTrack track)
     {
+        bool isNewTrack = false;
+
         lock (_voteLock)
         {
-            var item = _votes.GetOrAdd(track.Id, _ => new VoteItem
+            var item = _votes.GetOrAdd(track.Id, _ =>
             {
-                Track = track,
-                VoteCount = 0,
-                FirstVotedAt = DateTime.UtcNow,
-                VoterIds = []
+                isNewTrack = true;
+                return new VoteItem
+                {
+                    Track = track,
+                    VoteCount = 0,
+                    FirstVotedAt = DateTime.UtcNow,
+                    VoterIds = []
+                };
             });
 
             // 同一访客同一歌曲只能投一票
@@ -35,8 +44,13 @@ public class VotingEngine : IVotingEngine
 
             System.Diagnostics.Debug.WriteLine(
                 $"[Voting] 投票: Guest={guestId}, Track={track.Name}, 当前票数={item.VoteCount}");
-            return true;
         }
+
+        // 锁外触发事件，避免事件处理中的潜在死锁
+        if (isNewTrack)
+            NewTrackAdded?.Invoke(this, track);
+
+        return true;
     }
 
     public bool Unvote(string guestId, string trackId)
