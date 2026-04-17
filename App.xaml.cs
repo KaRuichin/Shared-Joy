@@ -8,12 +8,12 @@ namespace Shared_Joy
         {
             InitializeComponent();
 
-            // 应用启动时立即从 SecureStorage/Preferences 恢复 Spotify Token，
-            // 避免用户需要访问 SettingsPage 才能激活已登录状态
+            // 恢复 Spotify Token
             _ = spotifyAuth.TryRestoreTokenAsync();
 
-            // 初始化通知渠道并申请权限（同时激活 Singleton，使事件订阅生效）
-            _ = notificationService.InitializeAsync();
+            // 仅注入即可：NotificationService 构造时完成事件订阅 + 通知渠道创建。
+            // 运行时权限（Android 13+）需要 Activity 可见后申请，由 DashboardPage.OnAppearing 负责。
+            _ = notificationService;
         }
 
         protected override Window CreateWindow(IActivationState? activationState)

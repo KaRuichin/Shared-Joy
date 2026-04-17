@@ -13,16 +13,30 @@ public class NotificationService : INotificationService
     private static int _notificationId = 1000;
     private const string ChannelId = "shared_joy_votes";
 
+    // 防止重复申请权限（OnAppearing 可能多次触发）
+    private bool _permissionRequested;
+
     public NotificationService(IVotingEngine votingEngine)
     {
         votingEngine.NewTrackAdded += OnNewTrackAdded;
+
+        // 通知渠道只需要 ApplicationContext，无需 Activity 可见，在构造时立即创建
+#if ANDROID
+        CreateNotificationChannel();
+#endif
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// 申请运行时通知权限（Android 13+）。
+    /// 必须在 Activity 可见后调用（如 OnAppearing），否则系统不会弹出授权对话框。
+    /// 多次调用安全：已申请过则直接返回。
+    /// </summary>
     public async Task InitializeAsync()
     {
 #if ANDROID
-        CreateNotificationChannel();
+        if (_permissionRequested)
+            return;
+        _permissionRequested = true;
         await RequestAndroidPermissionAsync();
 #else
         await Task.CompletedTask;
