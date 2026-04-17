@@ -345,6 +345,60 @@ html, body {
 .vote-anim { animation: vote-pop 0.3s ease; }
 
 /* ─────────────────────────────────────────
+   离线横幅
+───────────────────────────────────────── */
+#offline-banner {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    background: #E74C3C;
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: center;
+    padding: 8px 16px;
+    z-index: 9999;
+}
+#offline-banner.visible { display: block; }
+
+/* 离线横幅可见时，给页面内容留出顶部空间 */
+body.offline-mode { padding-top: 36px; }
+
+/* ─────────────────────────────────────────
+   Toast 提示（JS 驱动）
+───────────────────────────────────────── */
+#toast-container {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    pointer-events: none;
+}
+
+.toast-msg {
+    background: rgba(30,30,30,0.92);
+    color: #fff;
+    font-size: 0.85rem;
+    padding: 10px 20px;
+    border-radius: 50px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.25s, transform 0.25s;
+    max-width: 320px;
+    text-align: center;
+    pointer-events: none;
+}
+.toast-msg.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ─────────────────────────────────────────
    滚动条
 ───────────────────────────────────────── */
 ::-webkit-scrollbar         { width: 5px; }

@@ -89,18 +89,37 @@ public class WebServerService : IWebServerService
             rootLayout.Add(StaticWebsite.From(tree));
         }
 
-        // 启动 GenHTTP 服务器
-        _host = Host.Create()
-            .Handler(rootLayout)
-            .Defaults()
-            .Port((ushort)port);
+        // 端口占用时自动重试（尝试 port 到 port+9）
+        Exception? lastEx = null;
+        for (int tryPort = port; tryPort <= port + 9; tryPort++)
+        {
+            try
+            {
+                _host = Host.Create()
+                    .Handler(rootLayout)
+                    .Defaults()
+                    .Port((ushort)tryPort);
 
-        Port = port;
-        IsRunning = true;
+                await _host.StartAsync();
 
-        await _host.StartAsync();
+                Port = tryPort;
+                IsRunning = true;
 
-        System.Diagnostics.Debug.WriteLine($"[WebServer] 服务器已启动, 端口={port}");
+                System.Diagnostics.Debug.WriteLine($"[WebServer] 服务器已启动, 端口={tryPort}");
+                return;
+            }
+            catch (Exception ex)
+            {
+                lastEx = ex;
+                _host = null;
+                System.Diagnostics.Debug.WriteLine($"[WebServer] 端口 {tryPort} 启动失败: {ex.Message}，尝试下一个端口");
+            }
+        }
+
+        // 所有端口均失败
+        throw new InvalidOperationException(
+            $"无法在端口 {port}-{port + 9} 范围内启动 Web 服务器，请检查端口占用情况",
+            lastEx);
     }
 
     public async Task StopAsync()

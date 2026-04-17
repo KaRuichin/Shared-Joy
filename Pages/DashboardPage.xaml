@@ -11,6 +11,32 @@
         <VerticalStackLayout Padding="20"
                 Spacing="16">
 
+            <!-- 无活跃 Spotify 设备横幅 -->
+            <Border IsVisible="{Binding HasNoDevice}"
+                    BackgroundColor="#FFF3CD"
+                    Stroke="#FFCA28"
+                    StrokeThickness="1"
+                    StrokeShape="RoundRectangle 6"
+                    Padding="12,8">
+                <Label Text="⚠️ No active Spotify device. Open Spotify on a device to enable playback controls."
+                       FontSize="12"
+                       TextColor="#856404"
+                       HorizontalTextAlignment="Center"/>
+            </Border>
+
+            <!-- 会话错误提示 -->
+            <Border IsVisible="{Binding StatusMessage, Converter={StaticResource StringNotEmptyConverter}}"
+                    BackgroundColor="#F8D7DA"
+                    Stroke="#F5C6CB"
+                    StrokeThickness="1"
+                    StrokeShape="RoundRectangle 6"
+                    Padding="12,8">
+                <Label Text="{Binding StatusMessage}"
+                       FontSize="12"
+                       TextColor="#721C24"
+                       HorizontalTextAlignment="Center"/>
+            </Border>
+
             <!-- 当前播放区域 -->
             <Border Stroke="{StaticResource Primary}"
                     Padding="12"

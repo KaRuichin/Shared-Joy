@@ -1,3 +1,5 @@
+using CommunityToolkit.Maui.Alerts;
+using CommunityToolkit.Maui.Core;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Maui.Controls;
@@ -121,6 +123,14 @@ public partial class DashboardViewModel : ObservableObject
     [ObservableProperty]
     private List<VoteItem> _voteQueue = [];
 
+    /// <summary>状态消息（会话启动失败等关键提示）</summary>
+    [ObservableProperty]
+    private string _statusMessage = string.Empty;
+
+    /// <summary>是否无活跃 Spotify 设备（控制提示横幅可见性）</summary>
+    [ObservableProperty]
+    private bool _hasNoDevice;
+
     #endregion
 
     #region 生命周期
@@ -167,6 +177,11 @@ public partial class DashboardViewModel : ObservableObject
 
     #region 播放状态轮询
 
+    // 上次网络错误 toast 时间（避免轮询期间频繁弹出）
+    private DateTime _lastNetworkErrorToast = DateTime.MinValue;
+    // 上次无设备 toast 时间
+    private DateTime _lastNoDeviceToast = DateTime.MinValue;
+
     /// <summary>
     /// 从 Spotify API 拉取当前播放状态并更新 UI 属性
     /// </summary>
@@ -189,6 +204,7 @@ public partial class DashboardViewModel : ObservableObject
                 AlbumImageUrl = track.AlbumImageUrl;
                 IsPlaying = playback.IsPlaying;
                 HasTrack = true;
+                HasNoDevice = false;
                 DurationMs = track.DurationMs;
                 ProgressMs = playback.ProgressMs;
                 DeviceName = playback.DeviceName;
@@ -198,7 +214,7 @@ public partial class DashboardViewModel : ObservableObject
             }
             else
             {
-                // 无播放内容
+                // 无活跃设备或无播放内容
                 HasTrack = false;
                 TrackName = string.Empty;
                 TrackArtists = string.Empty;
@@ -208,13 +224,32 @@ public partial class DashboardViewModel : ObservableObject
                 ProgressMs = 0;
                 DurationMs = 0;
                 DeviceName = string.Empty;
+                HasNoDevice = _spotifyAuth.IsAuthenticated; // 已登录但无设备
                 UpdateProgressDisplay();
+
+                // 无设备 toast（每 30 秒最多一次，避免轮询时频繁弹）
+                if (HasNoDevice && (DateTime.UtcNow - _lastNoDeviceToast).TotalSeconds > 30)
+                {
+                    _lastNoDeviceToast = DateTime.UtcNow;
+                    await ShowToastAsync("No active Spotify device detected. Open Spotify on a device.");
+                }
             }
 
             PlayPauseButtonText = IsPlaying ? "⏸ Pause" : "▶ Play";
 
             // 会话活跃时同步刷新投票队列和访客数
             RefreshVoteQueue();
+        }
+        catch (HttpRequestException ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Dashboard] 轮询网络异常: {ex.Message}");
+
+            // 网络错误 toast（每 60 秒最多一次）
+            if ((DateTime.UtcNow - _lastNetworkErrorToast).TotalSeconds > 60)
+            {
+                _lastNetworkErrorToast = DateTime.UtcNow;
+                await ShowToastAsync("Network error. Check your connection.");
+            }
         }
         catch (Exception ex)
         {
@@ -288,9 +323,20 @@ public partial class DashboardViewModel : ObservableObject
 
             PlayPauseButtonText = IsPlaying ? "⏸ Pause" : "▶ Play";
 
-            // 立即刷新播放状态
-            if (success)
+            if (!success)
+            {
+                await ShowToastAsync("No active Spotify device. Open Spotify on a device first.");
+            }
+            else
+            {
+                // 立即刷新播放状态
                 await PollPlaybackStateAsync();
+            }
+        }
+        catch (HttpRequestException)
+        {
+            await ShowToastAsync("Network error. Check your connection.");
+            System.Diagnostics.Debug.WriteLine("[Dashboard] 播放控制网络异常");
         }
         catch (Exception ex)
         {
@@ -311,6 +357,15 @@ public partial class DashboardViewModel : ObservableObject
                 await Task.Delay(500);
                 await PollPlaybackStateAsync();
             }
+            else
+            {
+                await ShowToastAsync("No active Spotify device. Open Spotify on a device first.");
+            }
+        }
+        catch (HttpRequestException)
+        {
+            await ShowToastAsync("Network error. Check your connection.");
+            System.Diagnostics.Debug.WriteLine("[Dashboard] 跳过网络异常");
         }
         catch (Exception ex)
         {
@@ -326,6 +381,8 @@ public partial class DashboardViewModel : ObservableObject
     [RelayCommand]
     private async Task StartSessionAsync()
     {
+        StatusMessage = string.Empty;
+
         try
         {
             // 设备震动反馈
@@ -360,10 +417,22 @@ public partial class DashboardViewModel : ObservableObject
 
             System.Diagnostics.Debug.WriteLine($"[Dashboard] 会话已启动, PIN={pin}, URL={url}");
         }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("端口"))
+        {
+            // Web 服务器端口全部被占用
+            System.Diagnostics.Debug.WriteLine($"[Dashboard] 端口被占用: {ex.Message}");
+            IsSessionActive = false;
+            _sessionManager.EndSession();
+            StatusMessage = "⚠️ Could not start server: all ports (8080-8089) are in use.";
+            await ShowToastAsync("Server port unavailable. Close other apps and retry.");
+        }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"[Dashboard] 启动会话异常: {ex.Message}");
             IsSessionActive = false;
+            _sessionManager.EndSession();
+            StatusMessage = "⚠️ Failed to start session.";
+            await ShowToastAsync("Failed to start session. Please try again.");
         }
     }
 
@@ -408,6 +477,22 @@ public partial class DashboardViewModel : ObservableObject
 
         VoteQueue = _votingEngine.GetRankedQueue();
         GuestCount = _sessionManager.GuestCount;
+    }
+
+    #endregion
+
+    #region 工具方法
+
+    /// <summary>
+    /// 在主线程弹出 CommunityToolkit Toast 提示
+    /// </summary>
+    private static async Task ShowToastAsync(string message, ToastDuration duration = ToastDuration.Short)
+    {
+        await MainThread.InvokeOnMainThreadAsync(async () =>
+        {
+            var toast = Toast.Make(message, duration, 14);
+            await toast.Show();
+        });
     }
 
     #endregion

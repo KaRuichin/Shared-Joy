@@ -8,6 +8,8 @@
     let guestId = null;
     let pollTimer = null;
     let searchDebounce = null;
+    let consecutiveErrors = 0;          // 连续轮询失败次数
+    var isOffline = false;               // 当前是否处于离线状态
 
     // ── DOM 引用 ──
     const authView = document.getElementById("auth-view");
@@ -15,6 +17,8 @@
     const pinInput = document.getElementById("pin-input");
     const pinSubmit = document.getElementById("pin-submit");
     const authError = document.getElementById("auth-error");
+    const offlineBanner = document.getElementById("offline-banner");
+    const toastContainer = document.getElementById("toast-container");
 
     const searchInput = document.getElementById("search-input");
     const searchResults = document.getElementById("search-results");
@@ -43,6 +47,7 @@
             opts.body = JSON.stringify(body);
         }
         return fetch(path, opts).then(function (res) {
+            setOnline();   // 收到任何响应都说明服务器可达
             if (res.status === 401) {
                 // 令牌失效，返回认证界面
                 showAuth();
@@ -50,7 +55,9 @@
             }
             if (!res.ok) return null;
             return res.json();
-        }).catch(function () {
+        }).catch(function (err) {
+            // fetch 失败（网络断开或服务器不可达）
+            handleNetworkError();
             return null;
         });
     }
@@ -60,6 +67,11 @@
         authToken = null;
         guestId = null;
         stopPolling();
+        // 重置离线状态（回到认证界面时清除横幅）
+        isOffline = false;
+        consecutiveErrors = 0;
+        offlineBanner.classList.remove("visible");
+        document.body.classList.remove("offline-mode");
         authView.classList.add("active");
         mainView.classList.remove("active");
         pinInput.value = "";
@@ -278,6 +290,49 @@
             clearInterval(pollTimer);
             pollTimer = null;
         }
+    }
+
+    // ── 离线检测 ──
+    function handleNetworkError() {
+        consecutiveErrors++;
+        // 连续 2 次失败才显示离线横幅，避免单次抖动误报
+        if (consecutiveErrors >= 2 && !isOffline) {
+            isOffline = true;
+            offlineBanner.classList.add("visible");
+            document.body.classList.add("offline-mode");
+            showToast("Connection lost. Retrying…");
+        }
+    }
+
+    function setOnline() {
+        if (isOffline) {
+            isOffline = false;
+            offlineBanner.classList.remove("visible");
+            document.body.classList.remove("offline-mode");
+            showToast("Connection restored.");
+        }
+        consecutiveErrors = 0;
+    }
+
+    // ── Toast 工具 ──
+    function showToast(message, durationMs) {
+        durationMs = durationMs || 2500;
+        var el = document.createElement("div");
+        el.className = "toast-msg";
+        el.textContent = message;
+        toastContainer.appendChild(el);
+
+        // 触发动画（rAF 确保浏览器已完成初次布局）
+        requestAnimationFrame(function () {
+            requestAnimationFrame(function () { el.classList.add("show"); });
+        });
+
+        setTimeout(function () {
+            el.classList.remove("show");
+            setTimeout(function () {
+                if (el.parentNode) el.parentNode.removeChild(el);
+            }, 300);
+        }, durationMs);
     }
 
     // ── 辅助函数 ──
