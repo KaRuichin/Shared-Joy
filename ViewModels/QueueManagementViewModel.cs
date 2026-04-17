@@ -87,14 +87,7 @@ public partial class QueueManagementViewModel : ObservableObject
     {
         try
         {
-            var sessionId = _sessionManager.SessionId;
-            if (string.IsNullOrEmpty(sessionId))
-            {
-                PlayHistoryList = [];
-                return;
-            }
-
-            var history = await _database.GetPlayHistoryAsync(sessionId);
+            var history = await _database.GetAllPlayHistoryAsync(100);
             PlayHistoryList = history;
 
             System.Diagnostics.Debug.WriteLine($"[QueueManagement] 加载播放历史: {history.Count} 条记录");

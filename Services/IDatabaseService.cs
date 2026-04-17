@@ -18,6 +18,9 @@ public interface IDatabaseService
     /// <summary>获取指定会话的播放历史（按播放时间降序）</summary>
     Task<List<PlayHistory>> GetPlayHistoryAsync(string sessionId);
 
+    /// <summary>获取全部播放历史（跨会话，按播放时间降序，最多 limit 条）</summary>
+    Task<List<PlayHistory>> GetAllPlayHistoryAsync(int limit = 100);
+
     // ── 投票记录 ──
 
     /// <summary>记录投票</summary>

@@ -80,6 +80,19 @@ public class DatabaseService : IDatabaseService
             .ToListAsync();
     }
 
+    /// <summary>
+    /// 获取全部播放历史（跨会话，按播放时间降序）
+    /// </summary>
+    public async Task<List<PlayHistory>> GetAllPlayHistoryAsync(int limit = 100)
+    {
+        var db = await GetConnectionAsync();
+
+        return await db.Table<PlayHistory>()
+            .OrderByDescending(h => h.PlayedAt)
+            .Take(limit)
+            .ToListAsync();
+    }
+
     // ── 投票记录 ──
 
     /// <summary>

@@ -123,7 +123,7 @@
 
                                                         <!-- 播放时间 -->
                                                         <Label Grid.Column="1"
-                                                               Text="{Binding PlayedAt, StringFormat='{0:HH:mm:ss}'}"
+                                                               Text="{Binding PlayedAt, StringFormat='{0:MM/dd HH:mm}'}"
                                                                TextColor="{AppThemeBinding Light=Gray, Dark=#AAAAAA}"
                                                                FontSize="11"
                                                                VerticalTextAlignment="Center"/>
