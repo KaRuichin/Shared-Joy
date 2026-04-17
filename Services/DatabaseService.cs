@@ -53,7 +53,7 @@ public class DatabaseService : IDatabaseService
     public async Task RecordPlayHistoryAsync(string trackId, string trackName, string artists, string sessionId)
     {
         var db = await GetConnectionAsync();
-
+        // 插入新记录
         var record = new PlayHistory
         {
             TrackId = trackId,
