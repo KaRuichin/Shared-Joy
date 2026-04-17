@@ -7,11 +7,6 @@
              x:DataType="vm:SettingsViewModel"
              Title="Settings">
 
-       <ContentPage.Behaviors>
-              <toolkit:EventToCommandBehavior
-                     EventName="Appearing"
-                     Command="{Binding InitializeCommand}"/>
-       </ContentPage.Behaviors>
 
        <ScrollView>
               <VerticalStackLayout Padding="20"
