@@ -2,57 +2,68 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#F0F2F5">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)"  content="#121212">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Shared Joy</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- PIN 输入视图 -->
+    <!-- ── PIN 认证视图 ── -->
     <div id="auth-view" class="view active">
-        <div class="auth-container">
-            <h1 class="app-title">Shared Joy</h1>
-            <p class="app-subtitle">Enter the PIN to join the session</p>
-            <input type="text" id="pin-input" maxlength="6" pattern="[0-9]*"
-                   inputmode="numeric" placeholder="000000" autocomplete="off">
-            <button id="pin-submit" class="btn btn-primary">Join</button>
+        <div class="auth-box">
+            <span class="auth-icon">🎵</span>
+            <h1 class="auth-title">Shared Joy</h1>
+            <p class="auth-subtitle">Enter the PIN to join the session</p>
+            <input id="pin-input" type="text" maxlength="6"
+                   inputmode="numeric" pattern="[0-9]*"
+                   placeholder="000000" autocomplete="off">
+            <button id="pin-submit" class="btn btn-primary btn-block">Join</button>
             <p id="auth-error" class="error-text hidden"></p>
         </div>
     </div>
 
-    <!-- 主界面 -->
+    <!-- ── 主界面
+         DOM 顺序 = 移动端显示顺序：Now Playing → Search → Queue
+         桌面端通过 grid-template-areas 重排为左栏 NP+Queue / 右栏 Search
+    ── -->
     <div id="main-view" class="view">
 
-        <!-- 当前播放 -->
-        <section id="now-playing" class="card">
+        <!-- Now Playing -->
+        <section class="card region-np" id="now-playing">
             <div id="np-empty" class="np-empty">
-                <span class="np-icon">&#127925;</span>
+                <span class="np-icon">🎵</span>
                 <p>Nothing playing</p>
             </div>
             <div id="np-content" class="np-content hidden">
-                <img id="np-album-art" class="np-album-art" src="" alt="Album Art">
+                <img id="np-album-art" class="np-art" src="" alt="Album Art">
                 <div class="np-info">
                     <p id="np-track" class="np-track"></p>
                     <p id="np-artist" class="np-artist"></p>
-                    <div class="np-progress-bar">
-                        <div id="np-progress" class="np-progress-fill"></div>
+                    <div class="progress-bar">
+                        <div id="np-progress" class="progress-fill"></div>
                     </div>
                     <p id="np-time" class="np-time">0:00 / 0:00</p>
                 </div>
             </div>
         </section>
 
-        <!-- 搜索 -->
-        <section class="card">
-            <input type="text" id="search-input" placeholder="Search for a song..."
-                   autocomplete="off" autocorrect="off" spellcheck="false">
-            <div id="search-results" class="search-results"></div>
+        <!-- Search -->
+        <section class="card region-search">
+            <input id="search-input" type="search"
+                   placeholder="Search for a song…"
+                   autocomplete="off" autocorrect="off"
+                   autocapitalize="off" spellcheck="false">
+            <div id="search-results" class="track-list"></div>
         </section>
 
-        <!-- 投票队列 -->
-        <section class="card">
+        <!-- Vote Queue -->
+        <section class="card region-queue">
             <h2 class="section-title">Vote Queue</h2>
-            <div id="vote-queue" class="vote-queue">
+            <div id="vote-queue" class="track-list">
                 <p class="empty-hint">No votes yet. Search and vote for a song!</p>
             </div>
         </section>

@@ -1,58 +1,97 @@
-/* ── 基础重置 & CSS 变量 ── */
+/* ── 基础重置 ── */
 *, *::before, *::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
 }
 
+/* ─────────────────────────────────────────
+   CSS 变量 — 浅色模式（默认）
+───────────────────────────────────────── */
 :root {
-    --bg: #121212;
-    --surface: #1e1e1e;
-    --surface-hover: #282828;
-    --primary: #1db954;
-    --primary-hover: #1ed760;
-    --text: #ffffff;
-    --text-secondary: #b3b3b3;
-    --text-muted: #727272;
-    --error: #e74c3c;
-    --border: #333;
-    --radius: 10px;
-    --radius-sm: 6px;
+    --bg:             #F0F2F5;
+    --surface:        #FFFFFF;
+    --surface-hover:  #EBEBEB;
+    --primary:        #1DB954;
+    --primary-hover:  #1ED760;
+    --text:           #121212;
+    --text-secondary: #555555;
+    --text-muted:     #888888;
+    --error:          #E74C3C;
+    --border:         #E0E0E0;
+    --radius:         12px;
+    --radius-sm:      6px;
 }
 
+/* ── 深色模式覆盖 ── */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg:             #121212;
+        --surface:        #1E1E1E;
+        --surface-hover:  #282828;
+        --text:           #FFFFFF;
+        --text-secondary: #B3B3B3;
+        --text-muted:     #727272;
+        --border:         #333333;
+    }
+}
+
+/* ─────────────────────────────────────────
+   基础
+───────────────────────────────────────── */
 html, body {
-    height: 100%;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                 Helvetica, Arial, sans-serif;
     background: var(--bg);
     color: var(--text);
     -webkit-tap-highlight-color: transparent;
+    line-height: 1.4;
 }
 
 /* ── 视图切换 ── */
-.view { display: none; }
-.view.active { display: block; }
+.view          { display: none; }
+.view.active   { display: block; }
 
-/* ── PIN 认证界面 ── */
-.auth-container {
+/* ── 通用工具类 ── */
+.hidden { display: none !important; }
+
+/* ─────────────────────────────────────────
+   认证界面
+───────────────────────────────────────── */
+#auth-view.active {
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
     min-height: 100vh;
     padding: 24px;
 }
 
-.app-title {
-    font-size: 2.4rem;
-    font-weight: 700;
-    color: var(--primary);
-    margin-bottom: 8px;
+.auth-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 340px;
+    text-align: center;
 }
 
-.app-subtitle {
-    font-size: 1rem;
+.auth-icon {
+    font-size: 3rem;
+    line-height: 1;
+    margin-bottom: 14px;
+}
+
+.auth-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 6px;
+}
+
+.auth-subtitle {
+    font-size: 0.95rem;
     color: var(--text-secondary);
-    margin-bottom: 32px;
+    margin-bottom: 24px;
 }
 
 #pin-input {
@@ -75,13 +114,13 @@ html, body {
 
 .error-text {
     color: var(--error);
-    font-size: 0.9rem;
+    font-size: 0.875rem;
     margin-top: 12px;
 }
 
-.hidden { display: none !important; }
-
-/* ── 按钮 ── */
+/* ─────────────────────────────────────────
+   按钮
+───────────────────────────────────────── */
 .btn {
     display: inline-flex;
     align-items: center;
@@ -95,6 +134,8 @@ html, body {
     transition: background 0.2s, transform 0.1s;
     touch-action: manipulation;
     min-height: 44px;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 .btn:active { transform: scale(0.96); }
@@ -102,42 +143,49 @@ html, body {
 .btn-primary {
     background: var(--primary);
     color: #fff;
-    margin-top: 20px;
-    width: 200px;
+    margin-top: 16px;
 }
-
 .btn-primary:hover { background: var(--primary-hover); }
 
+.btn-block { width: 200px; }
+
+/* 投票按钮 */
 .btn-vote {
     background: var(--surface-hover);
     color: var(--primary);
-    padding: 8px 16px;
+    padding: 8px 14px;
     font-size: 0.85rem;
-    border-radius: 50px;
-    min-width: 70px;
+    min-height: 36px;
+    min-width: 64px;
+    white-space: nowrap;
 }
+.btn-vote:hover   { background: var(--border); }
+.btn-vote.voted   { background: var(--primary); color: #fff; }
 
-.btn-vote.voted {
-    background: var(--primary);
-    color: #fff;
-}
-
-/* ── 卡片 ── */
+/* ─────────────────────────────────────────
+   卡片
+───────────────────────────────────────── */
 .card {
     background: var(--surface);
     border-radius: var(--radius);
     padding: 16px;
-    margin: 12px;
+    margin: 8px 12px;
 }
 
-/* ── Now Playing ── */
+/* ─────────────────────────────────────────
+   Now Playing
+───────────────────────────────────────── */
 .np-empty {
-    text-align: center;
-    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 0;
     color: var(--text-muted);
+    font-size: 0.9rem;
+    gap: 6px;
 }
 
-.np-icon { font-size: 2.5rem; }
+.np-icon { font-size: 2rem; }
 
 .np-content {
     display: flex;
@@ -145,18 +193,19 @@ html, body {
     align-items: center;
 }
 
-.np-album-art {
+.np-art {
     width: 72px;
     height: 72px;
     border-radius: var(--radius-sm);
     object-fit: cover;
     flex-shrink: 0;
+    background: var(--border);
 }
 
 .np-info { flex: 1; min-width: 0; }
 
 .np-track {
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
@@ -164,7 +213,7 @@ html, body {
 }
 
 .np-artist {
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     color: var(--text-secondary);
     white-space: nowrap;
     overflow: hidden;
@@ -172,7 +221,7 @@ html, body {
     margin-top: 2px;
 }
 
-.np-progress-bar {
+.progress-bar {
     height: 4px;
     background: var(--border);
     border-radius: 2px;
@@ -180,7 +229,7 @@ html, body {
     overflow: hidden;
 }
 
-.np-progress-fill {
+.progress-fill {
     height: 100%;
     background: var(--primary);
     border-radius: 2px;
@@ -189,15 +238,18 @@ html, body {
 }
 
 .np-time {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     color: var(--text-muted);
     margin-top: 4px;
 }
 
-/* ── 搜索 ── */
+/* ─────────────────────────────────────────
+   搜索
+───────────────────────────────────────── */
 #search-input {
+    display: block;
     width: 100%;
-    padding: 12px 16px;
+    padding: 10px 16px;
     font-size: 1rem;
     border: 1px solid var(--border);
     border-radius: 50px;
@@ -205,19 +257,20 @@ html, body {
     color: var(--text);
     outline: none;
     transition: border-color 0.2s;
+    flex-shrink: 0;
 }
 
 #search-input:focus {
     border-color: var(--primary);
 }
 
-.search-results {
+/* ─────────────────────────────────────────
+   曲目列表（搜索结果 & 投票队列共用）
+───────────────────────────────────────── */
+.track-list {
     margin-top: 10px;
-    max-height: 300px;
-    overflow-y: auto;
 }
 
-/* ── 曲目列表项（搜索结果 + 队列通用） ── */
 .track-item {
     display: flex;
     align-items: center;
@@ -225,7 +278,6 @@ html, body {
     padding: 10px 0;
     border-bottom: 1px solid var(--border);
 }
-
 .track-item:last-child { border-bottom: none; }
 
 .track-art {
@@ -234,15 +286,13 @@ html, body {
     border-radius: var(--radius-sm);
     object-fit: cover;
     flex-shrink: 0;
+    background: var(--border);
 }
 
-.track-info {
-    flex: 1;
-    min-width: 0;
-}
+.track-info { flex: 1; min-width: 0; }
 
 .track-name {
-    font-size: 0.95rem;
+    font-size: 0.92rem;
     font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
@@ -250,55 +300,127 @@ html, body {
 }
 
 .track-artist {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     color: var(--text-secondary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-}
-
-.track-action { flex-shrink: 0; }
-
-/* ── 投票队列 ── */
-.section-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: 8px;
-}
-
-.vote-queue .empty-hint {
-    text-align: center;
-    color: var(--text-muted);
-    padding: 16px 0;
-    font-size: 0.9rem;
+    margin-top: 1px;
 }
 
 .vote-count {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: var(--primary);
     font-weight: 600;
     margin-top: 2px;
 }
 
-/* ── 投票动画 ── */
+.track-action { flex-shrink: 0; }
+
+/* ─────────────────────────────────────────
+   队列区域
+───────────────────────────────────────── */
+.section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    flex-shrink: 0;
+}
+
+.empty-hint {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 20px 0;
+    font-size: 0.875rem;
+}
+
+/* ─────────────────────────────────────────
+   投票动画
+───────────────────────────────────────── */
 @keyframes vote-pop {
     0%   { transform: scale(1); }
     50%  { transform: scale(1.2); }
     100% { transform: scale(1); }
 }
+.vote-anim { animation: vote-pop 0.3s ease; }
 
-.vote-anim {
-    animation: vote-pop 0.3s ease;
+/* ─────────────────────────────────────────
+   滚动条
+───────────────────────────────────────── */
+::-webkit-scrollbar         { width: 5px; }
+::-webkit-scrollbar-track   { background: transparent; }
+::-webkit-scrollbar-thumb   { background: var(--border); border-radius: 3px; }
+
+/* ─────────────────────────────────────────
+   平板 (640px – 1023px): 单列居中
+───────────────────────────────────────── */
+@media (min-width: 640px) and (max-width: 1023px) {
+    #main-view.active {
+        max-width: 680px;
+        margin: 0 auto;
+        padding: 8px 16px;
+    }
+    .card { margin: 8px 0; }
 }
 
-/* ── 滚动条 ── */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+/* ─────────────────────────────────────────
+   桌面 (≥1024px): 双栏网格布局
+───────────────────────────────────────── */
+@media (min-width: 1024px) {
 
-/* ── 小屏适配 ── */
-@media (max-width: 400px) {
-    .card { margin: 8px; padding: 12px; }
-    .np-album-art { width: 56px; height: 56px; }
-    .track-art { width: 40px; height: 40px; }
+    html, body {
+        height: 100%;
+        overflow: hidden;
+    }
+
+    /* 主视图：全屏双栏网格 */
+    #main-view.active {
+        display: grid;
+        grid-template-areas:
+            "np     search"
+            "queue  search";
+        grid-template-columns: 2fr 3fr;
+        grid-template-rows: auto 1fr;
+        height: 100vh;
+        padding: 16px;
+        gap: 14px;
+        max-width: none;
+        margin: 0;
+    }
+
+    /* 各区域对应网格位置 */
+    .region-np     { grid-area: np; }
+
+    .region-search {
+        grid-area: search;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;    /* 限制内部滚动边界 */
+        min-height: 0;
+    }
+
+    .region-queue {
+        grid-area: queue;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        min-height: 0;
+    }
+
+    /* 桌面时卡片由 gap 控制间距，取消外边距 */
+    #main-view.active .card { margin: 0; }
+
+    /* 搜索结果列表：占满剩余高度并内部滚动 */
+    .region-search .track-list {
+        flex: 1;
+        overflow-y: auto;
+        min-height: 0;
+    }
+
+    /* 投票队列列表：占满剩余高度并内部滚动 */
+    .region-queue .track-list {
+        flex: 1;
+        overflow-y: auto;
+        min-height: 0;
+    }
 }
