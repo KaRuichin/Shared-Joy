@@ -144,7 +144,7 @@
                                HorizontalTextAlignment="Center"
                                IsVisible="{Binding LockedNextTrack, Converter={StaticResource InvertedBoolConverter}, TargetNullValue='False'}"/>
 
-                        <!-- 操作按钮 -->
+                        <!-- 操作按钮（第一行：队列操作） -->
                         <HorizontalStackLayout HorizontalOptions="Center"
                                                Spacing="16">
                                 <Button Text="🔄 Refresh"
@@ -155,6 +155,15 @@
                                         BackgroundColor="#E67E22"
                                         TextColor="White"
                                         WidthRequest="140"/>
+                        </HorizontalStackLayout>
+
+                        <!-- 操作按钮（第二行：历史操作） -->
+                        <HorizontalStackLayout HorizontalOptions="Center">
+                                <Button Text="🗑 Clear History"
+                                        Command="{Binding ClearHistoryCommand}"
+                                        BackgroundColor="#7F8C8D"
+                                        TextColor="White"
+                                        WidthRequest="160"/>
                         </HorizontalStackLayout>
                 </VerticalStackLayout>
 

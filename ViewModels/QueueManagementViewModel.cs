@@ -208,6 +208,24 @@ public partial class QueueManagementViewModel : ObservableObject
         System.Diagnostics.Debug.WriteLine("[QueueMgmt] 队列已清空");
     }
 
+    /// <summary>
+    /// 清除全部播放历史（从数据库删除，并刷新 UI 列表）
+    /// </summary>
+    [RelayCommand]
+    private async Task ClearHistoryAsync()
+    {
+        try
+        {
+            await _database.ClearAllPlayHistoryAsync();
+            PlayHistoryList = [];
+            System.Diagnostics.Debug.WriteLine("[QueueMgmt] 播放历史已清除");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[QueueMgmt] 清除历史异常: {ex.Message}");
+        }
+    }
+
     #endregion
 
     /// <summary>

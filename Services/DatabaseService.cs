@@ -93,6 +93,16 @@ public class DatabaseService : IDatabaseService
             .ToListAsync();
     }
 
+    /// <summary>
+    /// 清除全部播放历史记录
+    /// </summary>
+    public async Task ClearAllPlayHistoryAsync()
+    {
+        var db = await GetConnectionAsync();
+        var count = await db.ExecuteAsync("DELETE FROM PlayHistory");
+        System.Diagnostics.Debug.WriteLine($"[Database] 已清除全部播放历史: {count} 条");
+    }
+
     // ── 投票记录 ──
 
     /// <summary>
