@@ -99,9 +99,13 @@ public partial class DashboardViewModel : ObservableObject
     [ObservableProperty]
     private string _deviceName = string.Empty;
 
-    /// <summary>播放/暂停按钮文本</summary>
+    /// <summary>播放/暂停按钮图标</summary>
     [ObservableProperty]
-    private string _playPauseButtonText = "▶ Play";
+    private string _playPauseButtonText = "▶";
+
+    /// <summary>播放/暂停按钮说明文字</summary>
+    [ObservableProperty]
+    private string _playPauseLabel = "Play";
 
     /// <summary>QR 码图片</summary>
     [ObservableProperty]
@@ -235,7 +239,8 @@ public partial class DashboardViewModel : ObservableObject
                 }
             }
 
-            PlayPauseButtonText = IsPlaying ? "⏸ Pause" : "▶ Play";
+            PlayPauseButtonText = IsPlaying ? "⏸" : "▶";
+            PlayPauseLabel = IsPlaying ? "Pause" : "Play";
 
             // 会话活跃时同步刷新投票队列和访客数
             RefreshVoteQueue();
@@ -321,7 +326,8 @@ public partial class DashboardViewModel : ObservableObject
                 if (success) IsPlaying = true;
             }
 
-            PlayPauseButtonText = IsPlaying ? "⏸ Pause" : "▶ Play";
+            PlayPauseButtonText = IsPlaying ? "⏸" : "▶";
+            PlayPauseLabel = IsPlaying ? "Pause" : "Play";
 
             if (!success)
             {

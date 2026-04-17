@@ -36,4 +36,14 @@ public partial class DashboardPage : ContentPage
         base.OnDisappearing();
         _viewModel.StopPolling();
     }
+
+    private void OnPlayPauseClicked(object sender, EventArgs e) => Vibrate();
+    private void OnNextClicked(object sender, EventArgs e) => Vibrate();
+    private void OnStartSessionClicked(object sender, EventArgs e) => Vibrate();
+
+    private static void Vibrate()
+    {
+        try { HapticFeedback.Default.Perform(HapticFeedbackType.Click); }
+        catch { }
+    }
 }

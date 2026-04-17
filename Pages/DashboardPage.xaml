@@ -126,13 +126,47 @@
 
             <!-- 播放控制 -->
             <HorizontalStackLayout HorizontalOptions="Center"
-                    Spacing="16">
-                <Button Text="{Binding PlayPauseButtonText}"
-                        Command="{Binding TogglePlaybackCommand}"
-                        WidthRequest="120"/>
-                <Button Text="⏭ Next"
-                        Command="{Binding SkipNextCommand}"
-                        WidthRequest="100"/>
+                                   Spacing="28">
+
+                <!-- 播放 / 暂停 -->
+                <VerticalStackLayout HorizontalOptions="Center"
+                                     Spacing="6">
+                    <Button Text="{Binding PlayPauseButtonText}"
+                            Command="{Binding TogglePlaybackCommand}"
+                            Clicked="OnPlayPauseClicked"
+                            FontSize="26"
+                            WidthRequest="64"
+                            HeightRequest="64"
+                            CornerRadius="32"
+                            Padding="0"
+                            BackgroundColor="{StaticResource Primary}"
+                            TextColor="White"/>
+                    <Label Text="{Binding PlayPauseLabel}"
+                           FontSize="11"
+                           TextColor="Gray"
+                           HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+
+                <!-- 下一首 -->
+                <VerticalStackLayout HorizontalOptions="Center"
+                                     Spacing="6">
+                    <Button Text="⏭"
+                            Command="{Binding SkipNextCommand}"
+                            Clicked="OnNextClicked"
+                            FontSize="26"
+                            WidthRequest="64"
+                            HeightRequest="64"
+                            CornerRadius="32"
+                            Padding="0"
+                            BackgroundColor="Transparent"
+                            BorderColor="Gray"
+                            BorderWidth="1"/>
+                    <Label Text="Next"
+                           FontSize="11"
+                           TextColor="Gray"
+                           HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+
             </HorizontalStackLayout>
 
             <!-- QR 码与 PIN 码 -->
@@ -162,6 +196,7 @@
                     Spacing="16">
                 <Button Text="Start Session"
                         Command="{Binding StartSessionCommand}"
+                        Clicked="OnStartSessionClicked"
                         IsVisible="{Binding IsSessionActive, Converter={StaticResource InvertedBoolConverter}}"/>
                 <Button Text="End Session"
                         Command="{Binding EndSessionCommand}"
