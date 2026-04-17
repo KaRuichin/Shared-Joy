@@ -134,11 +134,12 @@
                     <Button Text="{Binding PlayPauseButtonText}"
                             Command="{Binding TogglePlaybackCommand}"
                             Clicked="OnPlayPauseClicked"
-                            FontSize="26"
+                            FontSize="24"
                             WidthRequest="64"
                             HeightRequest="64"
                             CornerRadius="32"
                             Padding="0"
+                            CharacterSpacing="0"
                             BackgroundColor="{StaticResource Primary}"
                             TextColor="White"/>
                     <Label Text="{Binding PlayPauseLabel}"
@@ -150,17 +151,19 @@
                 <!-- 下一首 -->
                 <VerticalStackLayout HorizontalOptions="Center"
                                      Spacing="6">
-                    <Button Text="⏭"
+                    <Button Text="⏭&#xFE0E;"
                             Command="{Binding SkipNextCommand}"
                             Clicked="OnNextClicked"
-                            FontSize="26"
+                            FontSize="24"
                             WidthRequest="64"
                             HeightRequest="64"
                             CornerRadius="32"
                             Padding="0"
+                            CharacterSpacing="0"
                             BackgroundColor="Transparent"
-                            BorderColor="Gray"
-                            BorderWidth="1"/>
+                            TextColor="{StaticResource Primary}"
+                            BorderColor="{StaticResource Primary}"
+                            BorderWidth="2"/>
                     <Label Text="Next"
                            FontSize="11"
                            TextColor="Gray"

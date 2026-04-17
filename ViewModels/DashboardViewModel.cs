@@ -99,9 +99,13 @@ public partial class DashboardViewModel : ObservableObject
     [ObservableProperty]
     private string _deviceName = string.Empty;
 
+    // U+FE0E (text variation selector) 阻止系统将符号渲染为彩色 Emoji
+    private const string IconPlay  = "▶\uFE0E";
+    private const string IconPause = "⏸\uFE0E";
+
     /// <summary>播放/暂停按钮图标</summary>
     [ObservableProperty]
-    private string _playPauseButtonText = "▶";
+    private string _playPauseButtonText = "▶\uFE0E";
 
     /// <summary>播放/暂停按钮说明文字</summary>
     [ObservableProperty]
@@ -239,7 +243,7 @@ public partial class DashboardViewModel : ObservableObject
                 }
             }
 
-            PlayPauseButtonText = IsPlaying ? "⏸" : "▶";
+            PlayPauseButtonText = IsPlaying ? IconPause : IconPlay;
             PlayPauseLabel = IsPlaying ? "Pause" : "Play";
 
             // 会话活跃时同步刷新投票队列和访客数
@@ -326,7 +330,7 @@ public partial class DashboardViewModel : ObservableObject
                 if (success) IsPlaying = true;
             }
 
-            PlayPauseButtonText = IsPlaying ? "⏸" : "▶";
+            PlayPauseButtonText = IsPlaying ? IconPause : IconPlay;
             PlayPauseLabel = IsPlaying ? "Pause" : "Play";
 
             if (!success)
