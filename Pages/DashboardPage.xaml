@@ -134,12 +134,13 @@
                     <Button Text="{Binding PlayPauseButtonText}"
                             Command="{Binding TogglePlaybackCommand}"
                             Clicked="OnPlayPauseClicked"
-                            FontSize="24"
+                            FontSize="26"
+                            FontAttributes="Bold"
                             WidthRequest="64"
                             HeightRequest="64"
                             CornerRadius="32"
                             Padding="0"
-                            CharacterSpacing="0"
+                            CharacterSpacing="2"
                             BackgroundColor="{StaticResource Primary}"
                             TextColor="White"/>
                     <Label Text="{Binding PlayPauseLabel}"
@@ -203,6 +204,7 @@
                         IsVisible="{Binding IsSessionActive, Converter={StaticResource InvertedBoolConverter}}"/>
                 <Button Text="End Session"
                         Command="{Binding EndSessionCommand}"
+                        Clicked="OnEndSessionClicked"
                         IsVisible="{Binding IsSessionActive}"
                         BackgroundColor="Red"
                         TextColor="White"/>

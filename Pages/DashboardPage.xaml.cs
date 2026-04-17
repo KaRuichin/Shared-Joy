@@ -40,6 +40,7 @@ public partial class DashboardPage : ContentPage
     private void OnPlayPauseClicked(object sender, EventArgs e) => Vibrate();
     private void OnNextClicked(object sender, EventArgs e) => Vibrate();
     private void OnStartSessionClicked(object sender, EventArgs e) => Vibrate();
+    private void OnEndSessionClicked(object sender, EventArgs e) => Vibrate();
 
     private static void Vibrate()
     {

@@ -99,9 +99,10 @@ public partial class DashboardViewModel : ObservableObject
     [ObservableProperty]
     private string _deviceName = string.Empty;
 
-    // U+FE0E (text variation selector) 阻止系统将符号渲染为彩色 Emoji
+    // ▶ U+25B6 (Geometric Shapes) 和 ‖ U+2016 (General Punctuation)
+    // 均不在 Unicode RGI Emoji 集合内，Android 不会渲染为彩色 Emoji
     private const string IconPlay  = "▶\uFE0E";
-    private const string IconPause = "⏸\uFE0E";
+    private const string IconPause = "\u2016";
 
     /// <summary>播放/暂停按钮图标</summary>
     [ObservableProperty]
