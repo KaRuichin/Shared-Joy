@@ -141,27 +141,28 @@ public class NotificationService : INotificationService
     {
         try
         {
-            // 构建 Toast XML（ToastText02 模板：大标题 + 正文）
-            var template = Windows.UI.Notifications.ToastNotificationManager
-                .GetTemplateContent(Windows.UI.Notifications.ToastTemplateType.ToastText02);
+            // Windows.UI.Notifications.CreateToastNotifier() 要求包身份标识，未打包应用会抛异常。
+            // 改用 Windows App SDK 的 AppNotificationManager，支持未打包（WindowsPackageType=None）应用。
+            // App 构造时已调用 AppNotificationManager.Default.Register()。
+            var xml = $"""
+                <toast>
+                    <visual>
+                        <binding template="ToastGeneric">
+                            <text>{System.Security.SecurityElement.Escape(title)}</text>
+                            <text>{System.Security.SecurityElement.Escape(body)}</text>
+                        </binding>
+                    </visual>
+                </toast>
+                """;
 
-            var textNodes = template.GetElementsByTagName("text");
-            textNodes[0].AppendChild(template.CreateTextNode(title));
-            textNodes[1].AppendChild(template.CreateTextNode(body));
-
-            var toast = new Windows.UI.Notifications.ToastNotification(template);
-
-            // CreateToastNotifier() 对于 MAUI Windows（打包或非打包）均可尝试
-            Windows.UI.Notifications.ToastNotificationManager
-                .CreateToastNotifier()
-                .Show(toast);
+            var notification = new Microsoft.Windows.AppNotifications.AppNotification(xml);
+            Microsoft.Windows.AppNotifications.AppNotificationManager.Default.Show(notification);
 
             System.Diagnostics.Debug.WriteLine($"[Notification] Windows Toast 已发送: {title}");
         }
         catch (Exception ex)
         {
-            // 未打包的应用在某些系统版本下可能不支持 Toast，静默忽略
-            System.Diagnostics.Debug.WriteLine($"[Notification] Windows Toast 异常（已忽略）: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"[Notification] Windows Toast 异常: {ex.Message}");
         }
     }
 #endif
